@@ -18,7 +18,7 @@ canonical vis-network shape so the existing views catalog consumes it
 unchanged.
 -}
 
-import Dict exposing (Dict)
+import Dict
 import Json.Encode as E
 import Set exposing (Set)
 import Studio.Data.Graph as Graph exposing (Edge, Graph)
@@ -115,7 +115,8 @@ scopeEdges g boundary scope =
         g.edges
 
 
-{-| Live counts for the scope panel. -}
+{-| Live counts for the scope panel.
+-}
 counts : Graph -> Bool -> Scope -> { nodes : Int, edges : Int }
 counts g boundary scope =
     let

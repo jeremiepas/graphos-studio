@@ -22,6 +22,7 @@ on:
       - "public/**"
       - "assets/**"
       - "elm.json"
+      - "review/**"
       - ".scripts/**"
       - "devenv.nix"
       - "devenv.yaml"
@@ -34,6 +35,7 @@ on:
       - "public/**"
       - "assets/**"
       - "elm.json"
+      - "review/**"
       - ".scripts/**"
       - "devenv.nix"
       - "devenv.yaml"
@@ -69,6 +71,9 @@ jobs:
 
       - name: Test (elm-test)
         run: nix shell github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm-test -c elm-test
+
+      - name: Lint (elm-review)
+        run: nix shell github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm-review -c elm-review
 
       - name: Fixture drift check (graph.json vs Fixtures.fixtureJson)
         run: .scripts/fixture-drift-check.sh

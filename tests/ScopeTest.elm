@@ -1,11 +1,11 @@
 module ScopeTest exposing (suite)
 
-{-| studio-subgraph-extract: scope algebra, boundary rule, canonical encoding. -}
+{-| studio-subgraph-extract: scope algebra, boundary rule, canonical encoding.
+-}
 
 import Expect
 import Fixtures
 import Json.Decode as D
-import Json.Encode as E
 import Set
 import Studio.Groups as Groups
 import Studio.Scope as Scope
@@ -34,7 +34,7 @@ suite =
             , test "group scope collects matching nodes" <|
                 \_ ->
                     Scope.addGroup g (Groups.newGroup "cfg" "config" "#fff") Scope.empty
-                        |> Expect.equal (Set.fromList [ "mod_Config" ])
+                        |> Expect.equal (Set.singleton "mod_Config")
             ]
         , describe "boundary rule"
             [ test "without boundary: only both-endpoint edges" <|
@@ -51,7 +51,7 @@ suite =
                     in
                     Expect.all
                         [ \r -> List.length r.edges |> Expect.equal 2
-                        , \r -> r.boundaryNodes |> Expect.equal (Set.fromList [ "mod_Config" ])
+                        , \r -> r.boundaryNodes |> Expect.equal (Set.singleton "mod_Config")
                         ]
                         result
             , test "counts include boundary nodes" <|

@@ -59,6 +59,16 @@ in
       ];
     };
 
+    "studio:review" = {
+      exec = "elm-review";
+      execIfModified = [
+        "src/**/*.elm"
+        "tests/**/*.elm"
+        "review/**/*.elm"
+        "review/elm.json"
+      ];
+    };
+
     "studio:fixture-drift" = {
       exec = ".scripts/fixture-drift-check.sh";
       execIfModified = [
@@ -84,6 +94,7 @@ in
         set -e
         elm make src/Main.elm --optimize --output=public/studio.js
         elm-test
+        elm-review
         .scripts/fixture-drift-check.sh
         violations=$(grep -rnE '#[0-9a-fA-F]{6}' src/ --include='*.elm' | grep -v 'DesignSystem/Tokens.elm' || true)
         if [ -n "$violations" ]; then
@@ -95,6 +106,7 @@ in
       after = [
         "studio:build@succeeded"
         "studio:test@succeeded"
+        "studio:review@succeeded"
       ];
     };
   };

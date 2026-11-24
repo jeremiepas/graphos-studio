@@ -70,7 +70,8 @@ port restoreFocus : E.Value -> Cmd msg
 
 {-| File-mode size guard lives in `Studio.Data.Source` (`studio-data-sources`):
 refuse files above this rather than freezing the tab, and recommend connected
-mode. Referenced here via `Source.sizeThresholdBytes`. -}
+mode. Referenced here via `Source.sizeThresholdBytes`.
+-}
 
 
 
@@ -104,7 +105,7 @@ type alias Model =
     , identity : Maybe String
     , caps : Api.Capabilities
     , probed : Int
-     , overview : Maybe Api.Overview
+    , overview : Maybe Api.Overview
     , nav : Navi.ViewState
     , pendingHash : Maybe String
     , suppressUrlMsg : Bool
@@ -177,12 +178,12 @@ init flagsValue url key =
       , theme = theme
       , stored = flags.stored
       , source = NoGraph
-       , graph = Graph.empty
-       , identity = Nothing
-       , caps = Api.noCapabilities
-       , probed = 0
-       , overview = Nothing
-       , nav = Navi.initialState
+      , graph = Graph.empty
+      , identity = Nothing
+      , caps = Api.noCapabilities
+      , probed = 0
+      , overview = Nothing
+      , nav = Navi.initialState
       , pendingHash = url.fragment
       , suppressUrlMsg = False
       , groups = []
@@ -197,9 +198,9 @@ init flagsValue url key =
       , focusIndex = 0
       , toasts = []
       , toastSeq = 0
-       , originInput = "http://localhost:8080"
-       , connecting = False
-       , connectingOrigin = Nothing
+      , originInput = "http://localhost:8080"
+      , connecting = False
+      , connectingOrigin = Nothing
       , groupForm = { name = "", query = "", color = Tokens.defaultGroupColor }
       , editLabel = ""
       , editKind = ""
@@ -260,13 +261,13 @@ type Msg
     | Connect
     | ProbedQuery Bool
     | ProbedSlices Bool
-     | GotRemoteGraph ( String, Result String String )
-     | GotOverview ( String, Result String String )
-     | ConnectionLost
-     | Retry
-     | Discard
-     | Disconnect
-       -- groups
+    | GotRemoteGraph ( String, Result String String )
+    | GotOverview ( String, Result String String )
+    | ConnectionLost
+    | Retry
+    | Discard
+    | Disconnect
+      -- groups
     | GroupFormName String
     | GroupFormQuery String
     | GroupFormColor String
@@ -451,11 +452,11 @@ update msg model =
 
         Connect ->
             ( { model
-                  | connecting = True
-                  , probed = 0
-                  , overview = Nothing
-                  , connectingOrigin = Just model.originInput
-                }
+                | connecting = True
+                , probed = 0
+                , overview = Nothing
+                , connectingOrigin = Just model.originInput
+              }
             , Cmd.batch
                 [ Api.probeQuery model.originInput ProbedQuery
                 , Api.probeSlices model.originInput ProbedSlices
@@ -531,18 +532,18 @@ update msg model =
             case model.source of
                 Disconnected _ ->
                     ( { model
-                          | source = NoGraph
-                          , graph = Graph.empty
-                          , identity = Nothing
-                          , nav = Navi.initialState
-                          , suppressUrlMsg = True
-                          , groups = []
-                          , stack = Edit.emptyStack
-                          , log = []
-                          , scope = Scope.empty
-                          , overview = Nothing
-                          , connecting = False
-                        }
+                        | source = NoGraph
+                        , graph = Graph.empty
+                        , identity = Nothing
+                        , nav = Navi.initialState
+                        , suppressUrlMsg = True
+                        , groups = []
+                        , stack = Edit.emptyStack
+                        , log = []
+                        , scope = Scope.empty
+                        , overview = Nothing
+                        , connecting = False
+                      }
                     , Nav.replaceUrl model.key (Navi.encodeHash Navi.initialState)
                     )
 
@@ -978,7 +979,8 @@ withSelectedNode model fn =
 
 {-| Both probes have returned; route to the resolved implementation. Slices
 capability boots from /api/overview (never the full graph.json); otherwise fall
-back to the legacy full-fetch path (`studio-data-sources` 2.2). -}
+back to the legacy full-fetch path (`studio-data-sources` 2.2).
+-}
 afterProbe : Model -> ( Model, Cmd Msg )
 afterProbe m =
     let
@@ -992,7 +994,8 @@ afterProbe m =
         ( m2, Cmd.none )
 
 
-{-| The single fetch a resolved connection needs. -}
+{-| The single fetch a resolved connection needs.
+-}
 resolveFetch : Model -> ( Model, Cmd Msg )
 resolveFetch model =
     let
@@ -1012,7 +1015,8 @@ resolveFetch model =
 
 {-| Shared slices-mode load path: boot from the overview (aggregates + totals +
 graph hash) with zero nodes/edges until communities pull their slices on
-drill-down. The overview's totals are authoritative for the stats line. -}
+drill-down. The overview's totals are authoritative for the stats line.
+-}
 overviewLoaded : String -> Api.Overview -> Model -> ( Model, Cmd Msg )
 overviewLoaded origin ov model =
     let
@@ -2003,15 +2007,15 @@ viewGraphStats model =
                 ++ " communities"
     in
     div [ A.class "muted" ]
-    ( List.concat
-        [ [ text statsText ]
-        , if identity == "" then
-            []
+        (List.concat
+            [ [ text statsText ]
+            , if identity == "" then
+                []
 
-          else
-            [ div [ A.class "hash" ] [ text identity ] ]
-        ]
-    )
+              else
+                [ div [ A.class "hash" ] [ text identity ] ]
+            ]
+        )
 
 
 viewTuningPanel : Model -> Html Msg
@@ -2119,15 +2123,14 @@ viewGroupsPanel model =
                 ]
     in
     UI.panel "Groups"
-        ([ div [ A.class "spread" ]
+        (div [ A.class "spread" ]
             [ evalBadge
             , div [ A.class "row" ]
                 [ UI.btn { label = "Import", enabled = True, onPress = ImportGroups }
                 , UI.btn { label = "Export", enabled = not (List.isEmpty model.groups), onPress = ExportGroups }
                 ]
             ]
-         ]
-            ++ List.indexedMap viewGroup model.groups
+            :: List.indexedMap viewGroup model.groups
             ++ [ UI.field "Name" (UI.textInput { value = model.groupForm.name, placeholder = "auth", onInput = GroupFormName })
                , UI.field "Query" (UI.textInput { value = model.groupForm.query, placeholder = "auth token", onInput = GroupFormQuery })
                , UI.field "Color"

@@ -33,8 +33,8 @@ elm-test
 python3 -m http.server -d public 8090     # → http://localhost:8090
 ```
 
-`devenv` tasks mirror CI: `devenv tasks run studio:ci` (build + tests + fixture
-drift + token lint). The Haskell package tests with
+`devenv` tasks mirror CI: `devenv tasks run studio:ci` (build + tests +
+`elm-review` + fixture drift + token lint). The Haskell package tests with
 `devenv tasks run openspec-view:test` (or `cd openspec-view && cabal test`).
 
 ## Layout
@@ -52,10 +52,11 @@ drift + token lint). The Haskell package tests with
 | `public/` | `index.html`, `ports.js` (renderer handle + localStorage only), vendored vis-network |
 | `assets/viewer/` | static HTML viewer assets (`viewer.css`, `viewer.js`, vendored vis-network) served by `graphos serve` |
 | `tests/` | 104 elm-tests: navigation invariants, codecs, editing, groups, scope |
+| `review/` | `elm-review` configuration (`NoUnused.Variables`, `Simplify`), run by CI |
 | `.scripts/fixture-drift-check.sh` | fails when `tests/fixtures/graph.json` and `Fixtures.fixtureJson` diverge |
 | `openspec-view/` | base-only Haskell package behind `graphos view` (change list, artifacts, spec diff, dashboard) |
 | `devenv.nix` / `devenv.yaml` | Elm toolchain on the nixpkgs pin that ships Elm 0.19.2, plus GHC/cabal for `openspec-view` |
-| `.github/workflows/studio.yml` | build, test, fixture drift and token lint |
+| `.github/workflows/studio.yml` | build, test, `elm-review`, fixture drift and token lint |
 
 ## Data sources (2.1–2.3)
 

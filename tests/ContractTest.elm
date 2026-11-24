@@ -13,6 +13,7 @@ usable data, so a binary output change that breaks the studio fails CI.
 
 The hand-written studio/tests/fixtures/graph.json stays for the offline
 unit tests (GraphTest); this suite validates against actual binary output.
+
 -}
 
 import ContractFixtures
@@ -20,7 +21,7 @@ import Dict
 import Expect
 import Json.Decode as D
 import Studio.Data.Graph as Graph
-import Test exposing (Test, describe, test)
+import Test exposing (Test, test)
 
 
 suite : Test
@@ -34,8 +35,9 @@ suite =
             -- committed placeholder; it asserts exactly that state so the
             -- offline unit-test run stays green.
             [ Test.test "placeholder: no graphos fixtures embedded (CI runs the contract from the graphos-fixture artifact)" <|
-                    \_ -> List.isEmpty ContractFixtures.fixtures |> Expect.equal True
+                \_ -> List.isEmpty ContractFixtures.fixtures |> Expect.equal True
             ]
+
          else
             List.concatMap fixtureTests ContractFixtures.fixtures
         )
@@ -81,8 +83,8 @@ fixtureTests ( name, json ) =
                         |> Dict.values
                         |> List.all
                             (\e ->
-                                (Dict.member e.source g.nodes)
-                                    && (Dict.member e.target g.nodes)
+                                Dict.member e.source g.nodes
+                                    && Dict.member e.target g.nodes
                             )
                         |> Expect.equal True
     , test (name ++ ": every community id resolves to a label") <|

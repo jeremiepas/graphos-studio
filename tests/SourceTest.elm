@@ -3,11 +3,11 @@ module SourceTest exposing (suite)
 {-| `Studio.Data.Source`: capability→implementation resolution, file-mode size
 guard, and the slice-API wire decoders (overview / community slice /
 neighborhood). The slice endpoints are not shipped server-side yet, so the
-decoder tests drive the client against the documented wire format directly. -}
+decoder tests drive the client against the documented wire format directly.
+-}
 
 import Expect
 import Json.Decode as D
-import String
 import Studio.Api as Api
 import Studio.Data.Source as Source
 import Test exposing (Test, describe, test)
@@ -128,12 +128,12 @@ suite =
                                 , List.length o.aggregates
                                 )
                             )
-                        |> Expect.equal ( Ok ( ( 1200000, 4000000, 8000 ), "sha:abc123", 1 ) )
+                        |> Expect.equal (Ok ( ( 1200000, 4000000, 8000 ), "sha:abc123", 1 ))
             , test "accepts the older `hash` field name and defaults missing totals" <|
                 \_ ->
                     D.decodeString Api.overviewDecoder overviewHashAliasJson
                         |> Result.map (\o -> ( o.graphHash, o.nodeCount, o.edgeCount ))
-                        |> Expect.equal ( Ok ( "fp:def456", 12, 11 ) )
+                        |> Expect.equal (Ok ( "fp:def456", 12, 11 ))
             ]
         , describe "community slice decoder (/api/slice/community)"
             [ test "decodes page, totals and next cursor" <|
@@ -146,7 +146,7 @@ suite =
                                 , ( s.totalMembers, s.totalInternalEdges, s.nextCursor )
                                 )
                             )
-                        |> Expect.equal ( Ok ( 483, 1, ( 12000, 30000, Just "page2" ) ) )
+                        |> Expect.equal (Ok ( 483, 1, ( 12000, 30000, Just "page2" ) ))
             , test "next cursor absent on the last page" <|
                 \_ ->
                     let
@@ -155,7 +155,7 @@ suite =
                     in
                     D.decodeString Source.communitySliceDecoder last
                         |> Result.map .nextCursor
-                        |> Expect.equal ( Ok Nothing )
+                        |> Expect.equal (Ok Nothing)
             ]
         , describe "neighborhood slice decoder (/api/slice/neighborhood)"
             [ test "decodes page, total size and truncation flag" <|
@@ -163,6 +163,6 @@ suite =
                     D.decodeString Source.neighborhoodSliceDecoder neighborhoodSliceJson
                         |> Result.map
                             (\s -> ( List.length s.nodes, s.totalSize, s.truncated ))
-                        |> Expect.equal ( Ok ( 1, 40, True ) )
+                        |> Expect.equal (Ok ( 1, 40, True ))
             ]
         ]

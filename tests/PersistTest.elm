@@ -2,12 +2,12 @@ module PersistTest exposing (suite)
 
 {-| `Studio.Persist`: the identity-keyed persistence-key factory and corpus
 A/B isolation logic (`studio-data-sources` graph identity). Logic-level only —
-no browser required. -}
+no browser required.
+-}
 
 import Dict exposing (Dict)
-import Json.Decode as D
 import Expect
-import List
+import Json.Decode as D
 import Studio.Persist as Persist
 import Test exposing (Test, describe, test)
 
@@ -24,7 +24,8 @@ corpusB =
 
 {-| A stored bag holding both corpora's per-graph state under their own keys,
 plus an unrelated artifact (theme). Decoded from a JSON object the same way the
-port layer restores persisted values on init. -}
+port layer restores persisted values on init.
+-}
 both : Dict String D.Value
 both =
     let
@@ -59,7 +60,7 @@ suite =
                         |> Expect.equal ("graphos-studio:groups:" ++ corpusA)
             ]
         , describe "filterFor A/B isolation"
-            [             test "reading corpus B returns only B's per-graph keys" <|
+            [ test "reading corpus B returns only B's per-graph keys" <|
                 \_ ->
                     Dict.keys (Persist.filterFor corpusB both)
                         |> List.sort

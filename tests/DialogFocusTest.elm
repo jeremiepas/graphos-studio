@@ -2,10 +2,11 @@ module DialogFocusTest exposing (suite)
 
 {-| Asserts the pure focus-management model (`Studio.DialogFocus`) that keeps a
 studio dialog keyboard-complete: key interpretation, focus-trap wrap arithmetic,
-and focus-return round-trip. -}
+and focus-return round-trip.
+-}
 
 import Expect
-import Fuzz exposing (Fuzzer)
+import Fuzz
 import Studio.DialogFocus as DF
 import Test exposing (Test, describe, fuzz, test)
 
@@ -61,7 +62,7 @@ suite =
             , test "prevIndex wraps before the first stop to the last" <|
                 \_ -> DF.prevIndex 0 |> Expect.equal (stopCount - 1)
             , test "wrapIndex handles negative indices via modBy sign of divisor" <|
-                \_ -> DF.wrapIndex 3 (-1) |> Expect.equal 2
+                \_ -> DF.wrapIndex 3 -1 |> Expect.equal 2
             , test "wrapIndex clamps a zero count to 0" <|
                 \_ -> DF.wrapIndex 0 5 |> Expect.equal 0
             , fuzz (Fuzz.intRange 0 1000) "nextIndex (prevIndex i) returns i wrapped" <|

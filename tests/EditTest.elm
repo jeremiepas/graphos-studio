@@ -4,7 +4,6 @@ module EditTest exposing (suite)
 undo/redo zipper, cypher translation, log round-trip.
 -}
 
-import Dict
 import Expect
 import Fixtures exposing (mkEdge, mkNode)
 import Studio.Data.Graph as Graph
