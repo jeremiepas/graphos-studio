@@ -1,0 +1,10 @@
+# Elm 0.19.2 pin.
+#
+# The pin is the same nixpkgs revision `.github/workflows/studio.yml` uses, and
+# it is the oldest one that still ships Elm 0.19.2 (0.19.2-1 for elm-test). An
+# older pin (d482ef84049d9b7276b83a06e4e4d76983830097) shipped elm 0.19.1, which
+# made every studio run fail at the `elm.json` version gate — that is why both
+# the dev shell and CI must resolve `elmPackages` from this exact revision.
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a

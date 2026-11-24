@@ -1,0 +1,8 @@
+# Elm build artifacts
+elm-stuff/
+# Generated bundle (elm make --output=public/studio.js); public/ sources are tracked
+public/studio.js
+
+# devenv / direnv
+.direnv/
+.devenv/
