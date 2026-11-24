@@ -14,6 +14,10 @@ in
     elm.elm-review
     # `.scripts/fixture-drift-check.sh` (graph.json vs Fixtures.fixtureJson).
     pkgs.python3
+    # `openspec-view/` is a base-only Haskell package (the `graphos view`
+    # backend). GHC + cabal let it be built and tested from this repo alone.
+    pkgs.ghc
+    pkgs.cabal-install
   ];
 
   # Fail fast if the pin ever drifts off Elm 0.19.2: elm.json rejects anything
@@ -60,6 +64,17 @@ in
       execIfModified = [
         "tests/fixtures/graph.json"
         "tests/Fixtures.elm"
+      ];
+    };
+
+    # The openspec-view Haskell package: `graphos view`'s rendering backend.
+    # Its disk-scanning specs mark themselves pending when no openspec/changes
+    # tree is above the working directory, so it tests green standalone.
+    "openspec-view:test" = {
+      exec = "cd openspec-view && cabal test";
+      execIfModified = [
+        "openspec-view/**/*.hs"
+        "openspec-view/openspec-view.cabal"
       ];
     };
 

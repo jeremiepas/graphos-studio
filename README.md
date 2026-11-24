@@ -1,7 +1,7 @@
 # graphos-studio
 
 Frontend of Graphos, split out of the Haskell monorepo (openspec change
-`split-graphos-studio` in the Graphos repo). Two deliverables live here:
+`split-graphos-studio` in the Graphos repo). Three deliverables live here:
 
 - **Graphos Studio** — a standalone Elm workbench for Graphos graphs (spec:
   `elm-graph-studio` in the Graphos repo). Load a `graph.json` (drag-and-drop,
@@ -13,6 +13,11 @@ Frontend of Graphos, split out of the Haskell monorepo (openspec change
 - **HTML viewer assets** — `viewer.js`, `viewer.css` and the vendored
   vis-network renderer, served at runtime by `graphos serve` from the bundle
   built here (no longer embedded into the Haskell binary at compile time).
+- **`openspec-view` package** — the `graphos view` backend (OpenSpec change
+  list, artifact view, spec diff, state dashboard) as a standalone `base`-only
+  Haskell package, `openspec-view/openspec-view.cabal`. It reads an
+  `openspec/` workspace; the `graphos` executable depends on it as a normal
+  package instead of an in-repo sub-library.
 
 The only boundary with the Haskell repo is the `graph-json-contract` shape and
 the `graphos serve` slice/query API; both are consumed unchanged.
@@ -29,7 +34,8 @@ python3 -m http.server -d public 8090     # → http://localhost:8090
 ```
 
 `devenv` tasks mirror CI: `devenv tasks run studio:ci` (build + tests + fixture
-drift + token lint).
+drift + token lint). The Haskell package tests with
+`devenv tasks run openspec-view:test` (or `cd openspec-view && cabal test`).
 
 ## Layout
 
@@ -47,7 +53,8 @@ drift + token lint).
 | `assets/viewer/` | static HTML viewer assets (`viewer.css`, `viewer.js`, vendored vis-network) served by `graphos serve` |
 | `tests/` | 104 elm-tests: navigation invariants, codecs, editing, groups, scope |
 | `.scripts/fixture-drift-check.sh` | fails when `tests/fixtures/graph.json` and `Fixtures.fixtureJson` diverge |
-| `devenv.nix` / `devenv.yaml` | Elm toolchain on the nixpkgs pin that ships Elm 0.19.2 |
+| `openspec-view/` | base-only Haskell package behind `graphos view` (change list, artifacts, spec diff, dashboard) |
+| `devenv.nix` / `devenv.yaml` | Elm toolchain on the nixpkgs pin that ships Elm 0.19.2, plus GHC/cabal for `openspec-view` |
 | `.github/workflows/studio.yml` | build, test, fixture drift and token lint |
 
 ## Data sources (2.1–2.3)
