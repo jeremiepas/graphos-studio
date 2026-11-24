@@ -57,6 +57,13 @@ python3 -m http.server -d public 8090     # → http://localhost:8090
 | `openspec-view/` | base-only Haskell package behind `graphos view` (change list, artifacts, spec diff, dashboard) |
 | `devenv.nix` / `devenv.yaml` | Elm toolchain on the nixpkgs pin that ships Elm 0.19.2, plus GHC/cabal for `openspec-view` |
 | `.github/workflows/studio.yml` | build, test, `elm-review`, fixture drift and token lint |
+| `.github/workflows/contract.yml` | cross-repo `graph-json-contract` check: decodes real `graph.json` output dispatched by the Graphos `fixture` job |
+
+The contract job is wired to the Haskell repo by a `repository_dispatch`
+event (`graph-json-contract`) carrying the `graphos-fixture` files inline.
+Set the optional `GRAPHOS_CONTRACT_TOKEN` secret (fine-grained PAT: Actions
+read on `jeremiepas/Graphos`) to let push/PR/schedule runs pull the latest
+fixture artifact; without it those runs exercise the checked-in placeholder.
 
 ## Data sources (2.1–2.3)
 
