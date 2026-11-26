@@ -115,3 +115,29 @@ Fields the text output has and the JSON has not:
 - **Endpoint/profile details** of an unreachable run: the text and the JSON both
   say only `the endpoint is still unreachable at the longest back-off`, with no
   profile list.
+
+## 7.1 Design system, keyboard and states
+
+Measured on 2026-11-26, after the view was written.
+
+- **The view uses no colour literal.** The CI command
+  `grep -rnE '#[0-9a-fA-F]{6}' src/ --include='*.elm' | grep -v 'DesignSystem/Tokens.elm'`
+  prints nothing; every colour comes from `Studio.DesignSystem.Tokens`. A colour
+  literal added to a module of the view fails that lint (task 7.1's scenario
+  *A colour literal*).
+- **`elm-review`** (`NoUnused.Variables`, `Simplify`) reports `I found no errors!`.
+- **Keyboard.** The state is a text in the header (`id="orchestrator-state"`); a
+  line's control is a real `<button>` (`UI.btn`), so it takes focus and is
+  activated by Enter or Space. `tests/Mnemo/OrchestratorTest.elm` checks that the
+  state, a line and its button are present, and that a click dispatches
+  `SelectRun` with the run's full key.
+- **One test per state:** loading, live, gone, never held, not served, stale and
+  session expired are in `tests/Mnemo/OrchestratorTest.elm`.
+
+## 7.2 README
+
+`git show HEAD:README.md | grep -i orchestrator` printed nothing before the edit.
+The README now has an *Orchestrator view* subsection under *Mnemo page*: the
+state and heartbeat, the seven words, that it controls nothing, that it shows
+"not served" until the console has `/api/orchestrator`, and where the recorded
+answers live.

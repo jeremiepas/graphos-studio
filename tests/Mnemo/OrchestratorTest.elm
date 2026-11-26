@@ -499,6 +499,36 @@ suite =
                         |> Query.fromHtml
                         |> Query.has [ Selector.text "Loading the orchestrator's state…" ]
             ]
+        , describe "design system and keyboard" <|
+            [ test "the state can be read, a line reached and its run opened by keyboard" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "r1"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+
+                        html =
+                            App.view (modelWithRuns report runsFixture) |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.id "orchestrator-state" ]
+                        , \_ ->
+                            html
+                                |> Query.find [ Selector.class "mnemo-orchestrator-run" ]
+                                |> Query.find [ Selector.class "mnemo-orchestrator-open" ]
+                                |> Query.find [ Selector.tag "button" ]
+                                |> Query.has [ Selector.text "Open run" ]
+                        ]
+                        ()
+            ]
         , describe "the clock" <|
             [ test "an ISO time gives milliseconds and survives a round trip" <|
                 \_ ->
