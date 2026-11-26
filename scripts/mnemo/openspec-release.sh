@@ -352,6 +352,7 @@ merge() {
   tree="$(require_tree "${change}")" || return $?
   branch="$(branch_of "${change}")"
   pr="$(cd "${tree}" && gh pr view "${branch}" --json number --jq .number)"
+  (cd "${tree}" && gh pr ready "${pr}") >&2
   version="$(next_version)" || return $?
 
   sed -i "s/^version:.*/version:            ${version}.0/" "${tree}/openspec-view/openspec-view.cabal"
@@ -361,6 +362,7 @@ merge() {
     git -C "${tree}" push -q origin "${branch}"
   fi
 
+  (cd "${tree}" && gh pr checks "${pr}" --watch --fail-fast) >&2
   (cd "${tree}" && gh pr merge "${pr}" --squash) >&2
   git -C "${ROOT}" fetch -q origin main --tags
   if ! git -C "${ROOT}" rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
