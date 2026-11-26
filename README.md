@@ -108,7 +108,7 @@ Haskell package tests with `devenv tasks run openspec-view:test` (or
 `src/Mnemo/Main.elm` is a second Elm entry, the read-only Mnemo page
 (`mnemo-workbench`): a left panel of the console's spaces, each workflow's runs
 with status and token use, and the graph of a selected run. It builds to
-`public/mnemo/mnemo.js`; `public/mnemo/index.html` starts `Elm.Mnemo` on `#app`
+`public/mnemo/mnemo.js`; `public/mnemo/index.html` starts `Elm.Mnemo.Main` on `#app`
 through `boot.js`, so the console's `script-src 'self'` policy holds.
 
 When the console serves a frontend bundle (`mnemo web --frontend-dir

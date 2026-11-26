@@ -44,7 +44,7 @@ Result: `OK` for the graph fixture and for the five Mnemo fixtures.
 
 Command: `.scripts/mnemo-entry-check.sh`
 
-Result: `OK: public/mnemo/index.html starts Elm.Mnemo on #app`.
+Result: `OK: public/mnemo/index.html starts Elm.Mnemo.Main on #app`.
 
 Token lint (no hex literal outside `Studio.DesignSystem.Tokens.elm`): no
 violations.
