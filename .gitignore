@@ -2,6 +2,7 @@
 elm-stuff/
 # Generated bundle (elm make --output=public/studio.js); public/ sources are tracked
 public/studio.js
+public/mnemo/mnemo.js
 
 # devenv / direnv
 .direnv/

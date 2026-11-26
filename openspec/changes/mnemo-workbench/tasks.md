@@ -16,10 +16,10 @@ page is checked live after those two changes are applied. The graph Studio is no
 
 ## 2. The second entry and its build
 
-- [ ] 2.1 Checks first: `elm make src/Mnemo/Main.elm --output=public/mnemo/mnemo.js` in a test
+- [x] 2.1 Checks first: `elm make src/Mnemo/Main.elm --output=public/mnemo/mnemo.js` in a test
   task, and a test that `public/mnemo/index.html` starts `Elm.Mnemo` on the `app` node (a shell
   check or a small fixture test).
-- [ ] 2.2 Add `src/Mnemo/Main.elm` (`Browser.element`, the model, the messages, the update and the
+- [x] 2.2 Add `src/Mnemo/Main.elm` (`Browser.element`, the model, the messages, the update and the
   view skeleton, the tokens' stylesheet), `public/mnemo/index.html`, the `elm/svg` dependency and
   the direct `elm/time`; add `mnemo:build` to `devenv.nix`; make 2.1 pass.
 

@@ -76,6 +76,18 @@ in
       ];
     };
 
+    # The Mnemo page is a second entry (`mnemo-workbench`), served by the
+    # console's `--frontend-dir public/mnemo`; it does not load the graph
+    # workbench's bundle.
+    "mnemo:build" = {
+      exec = "elm make src/Mnemo/Main.elm --optimize --output=public/mnemo/mnemo.js";
+      execIfModified = [
+        "src/Mnemo/**/*.elm"
+        "src/Studio/DesignSystem/**/*.elm"
+        "elm.json"
+      ];
+    };
+
     "studio:test" = {
       exec = "elm-test";
       execIfModified = [
