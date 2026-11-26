@@ -190,7 +190,7 @@ suite =
                             }
 
                         updated =
-                            App.update (App.GotOrchestrator (Ok newer)) (model live)
+                            App.update (App.GotOrchestrator now (Ok newer)) (model live)
                                 |> Tuple.first
                     in
                     App.view updated
@@ -426,7 +426,7 @@ suite =
                 \_ ->
                     let
                         updated =
-                            App.update (App.GotOrchestrator (Err Api.NotFound)) (model live)
+                            App.update (App.GotOrchestrator now (Err Api.NotFound)) (model live)
                                 |> Tuple.first
 
                         html =
@@ -442,7 +442,7 @@ suite =
                 \_ ->
                     let
                         updated =
-                            App.update (App.GotOrchestrator (Err (Api.BadStatus 503))) (model live)
+                            App.update (App.GotOrchestrator now (Err (Api.BadStatus 503))) (model live)
                                 |> Tuple.first
 
                         html =
@@ -459,7 +459,7 @@ suite =
                 \_ ->
                     let
                         updated =
-                            App.update (App.GotOrchestrator (Err Api.Unauthorized)) (model live)
+                            App.update (App.GotOrchestrator now (Err Api.Unauthorized)) (model live)
                                 |> Tuple.first
                     in
                     Expect.all
@@ -537,6 +537,11 @@ suite =
                         (Format.millisFromIso "2026-11-26T22:25:08Z"
                             |> Maybe.map Format.isoFromMillis
                         )
+            , test "a heartbeat read at its own time is not old" <|
+                \_ ->
+                    App.view (model live)
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "just now" ]
             , test "an age is plain words" <|
                 \_ ->
                     Expect.equal

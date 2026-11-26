@@ -141,3 +141,11 @@ The README now has an *Orchestrator view* subsection under *Mnemo page*: the
 state and heartbeat, the seven words, that it controls nothing, that it shows
 "not served" until the console has `/api/orchestrator`, and where the recorded
 answers live.
+
+## Pending: a person's steps and the live check
+
+Tasks 1.3 (the route proposal in `poc-graphos`), 1.4 (the one-week baseline) and
+8.1–8.3 (the live check after the route and the pin move) are a person's steps
+and remain open. 8.1 cannot start until the route of 1.3 is merged upstream;
+until then the page keeps the assumed `/api/orchestrator` path and says "not
+served" when the console answers `404`.

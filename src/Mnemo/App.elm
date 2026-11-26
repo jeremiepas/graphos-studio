@@ -30,6 +30,7 @@ import Studio.DesignSystem.Tokens as Tokens exposing (Theme(..))
 import Svg
 import Svg.Attributes as SA
 import Svg.Events as SE
+import Task
 import Time
 
 
@@ -93,7 +94,8 @@ type Msg
     | GotSpace (Result Api.Error Session)
     | SelectSpace String
     | GotRuns (Result Api.Error (List Run))
-    | GotOrchestrator (Result Api.Error Orchestrator)
+    | GotOrchestrator Time.Posix (Result Api.Error Orchestrator)
+    | FetchOrchestrator Time.Posix
     | Poll Time.Posix
     | SelectRun String
     | GotRun (Result Api.Error RunDetail)
@@ -123,7 +125,7 @@ update msg model =
                 , runsLoading = True
                 , orchestrator = Orchestrator.Loading
               }
-            , Cmd.batch [ Api.getRuns GotRuns, Api.getOrchestrator GotOrchestrator ]
+            , Cmd.batch [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
             )
 
         GotSession (Err Api.Unauthorized) ->
@@ -166,7 +168,7 @@ update msg model =
                 , stepRunNotice = Nothing
                 , orchestrator = Orchestrator.Loading
               }
-            , Cmd.batch [ Api.getRuns GotRuns, Api.getOrchestrator GotOrchestrator ]
+            , Cmd.batch [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
             )
 
         GotSpace (Err Api.Unauthorized) ->
@@ -209,22 +211,30 @@ update msg model =
             , Cmd.none
             )
 
-        GotOrchestrator (Ok report) ->
-            ( { model | orchestrator = Orchestrator.Loaded { report = report, readAt = model.now } }
+        FetchOrchestrator posix ->
+            ( { model | now = posix }
+            , Api.getOrchestrator (GotOrchestrator posix)
+            )
+
+        GotOrchestrator readAt (Ok report) ->
+            ( { model
+                | now = readAt
+                , orchestrator = Orchestrator.Loaded { report = report, readAt = readAt }
+              }
             , Cmd.none
             )
 
-        GotOrchestrator (Err Api.Unauthorized) ->
+        GotOrchestrator _ (Err Api.Unauthorized) ->
             ( { model | sessionExpired = True }
             , Cmd.none
             )
 
-        GotOrchestrator (Err Api.NotFound) ->
+        GotOrchestrator _ (Err Api.NotFound) ->
             ( { model | orchestrator = Orchestrator.NotServed }
             , Cmd.none
             )
 
-        GotOrchestrator (Err err) ->
+        GotOrchestrator readAt (Err err) ->
             let
                 message =
                     describeError "/api/orchestrator" err
@@ -243,7 +253,7 @@ update msg model =
                             Orchestrator.Stale { stale | notice = message ++ " The last state stays." }
 
                         _ ->
-                            Orchestrator.Stale { report = Nothing, readAt = model.now, notice = message }
+                            Orchestrator.Stale { report = Nothing, readAt = readAt, notice = message }
               }
             , Cmd.none
             )
@@ -257,7 +267,7 @@ update msg model =
                     ( { model | now = posix }
                     , Cmd.batch
                         (Api.getRuns GotRuns
-                            :: Api.getOrchestrator GotOrchestrator
+                            :: Api.getOrchestrator (GotOrchestrator posix)
                             :: (case model.selectedRun of
                                     Just key ->
                                         [ Api.getRun key GotRun ]
@@ -368,7 +378,7 @@ update msg model =
                         [ Api.getSession GotSession ]
 
                     else
-                        [ Api.getRuns GotRuns, Api.getOrchestrator GotOrchestrator ]
+                        [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
 
                 detailCommand =
                     case model.selectedRun of
