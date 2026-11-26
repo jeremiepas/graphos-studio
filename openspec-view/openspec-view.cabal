@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               openspec-view
-version:            0.1.1.0
+version:            0.1.2.0
 synopsis:           Reader and renderer for OpenSpec change workspaces
 description:        Standalone, base-only package that reads an OpenSpec
                     workspace (proposals, designs, tasks, delta specs) and
