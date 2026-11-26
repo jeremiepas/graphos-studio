@@ -16,8 +16,16 @@ in
     pkgs.python3
     # `openspec-view/` is a base-only Haskell package (the `graphos view`
     # backend). GHC + cabal let it be built and tested from this repo alone.
+    # The dev stack builds the pinned mnemo binary with the same GHC.
     pkgs.ghc
     pkgs.cabal-install
+    # The dev stack fetches verified release artifacts and clones the pinned
+    # mnemo source. `pkg-config` lets cabal find system libraries.
+    pkgs.curl
+    pkgs.jq
+    pkgs.git
+    pkgs.gh
+    pkgs.pkg-config
   ];
 
   # Fail fast if the pin ever drifts off Elm 0.19.2: elm.json rejects anything
@@ -29,7 +37,35 @@ in
       echo "devenv: check the nixpkgs pin in devenv.yaml" >&2
     fi
     echo "Graphos Studio — elm $elm_version · elm-test $(${elm.elm-test}/bin/elm-test --version)"
+
+    # Dev-stack configuration paths: an exported value wins, otherwise the
+    # file lives under the user's home. scripts/dev-stack/lib.sh resolves the
+    # same defaults so the processes also work without this interactive shell.
+    export GRAPHOS_CONFIG="''${GRAPHOS_CONFIG:-$HOME/.config/graphos/graphos.yaml}"
+    export MNEMO_CONFIG="''${MNEMO_CONFIG:-$HOME/.config/mnemo/graphos-studio.yaml}"
+    echo "  config   GRAPHOS_CONFIG=$GRAPHOS_CONFIG"
+    echo "  config   MNEMO_CONFIG=$MNEMO_CONFIG"
   '';
+
+  # `devenv up` supervises the three services in the foreground and prefixes
+  # their logs; Ctrl-C stops it. `devenv processes start` / `devenv processes
+  # down` is the background pair. Each wrapper verifies its pinned artifact
+  # before the service starts, so a stale or corrupted cache fails closed. A
+  # failed service stays failed (no restart loop) so its log stays readable.
+  processes = {
+    studio = {
+      exec = "scripts/dev-stack/studio.sh";
+      process-compose.restart = "no";
+    };
+    graphos = {
+      exec = "scripts/dev-stack/graphos.sh";
+      process-compose.restart = "no";
+    };
+    mnemo = {
+      exec = "scripts/dev-stack/mnemo.sh";
+      process-compose.restart = "no";
+    };
+  };
 
   tasks = {
     "studio:build" = {
@@ -108,6 +144,23 @@ in
         "studio:test@succeeded"
         "studio:review@succeeded"
       ];
+    };
+
+    # Fetch and verify both pinned artifacts ahead of time, for a first run or
+    # an offline check. The task is idempotent: verified cache entries are
+    # reported and reused, never downloaded or rebuilt again.
+    "dev-stack:fetch" = {
+      exec = ''
+        set -e
+        scripts/dev-stack/fetch-graphos.sh
+        scripts/dev-stack/fetch-mnemo.sh
+      '';
+    };
+
+    # Preflight: pins, cached artifacts and sidecars, configuration paths, the
+    # selected graph and the three ports. Every failure names its remediation.
+    "dev-stack:check" = {
+      exec = "scripts/dev-stack/check.sh";
     };
   };
 }
