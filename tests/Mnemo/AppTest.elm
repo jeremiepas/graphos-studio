@@ -148,6 +148,27 @@ suite =
                     App.view { modelWithSession | runs = [] }
                         |> Query.fromHtml
                         |> Query.has [ Selector.text "This space has no run." ]
+            , test "the run list shows its loading state before the first answer" <|
+                \_ ->
+                    App.view { modelWithSession | runs = [], runsLoading = True }
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "Loading runs…" ]
+            , test "the graph shows its loading state before it is fetched" <|
+                \_ ->
+                    App.view { modelWithSession | selectedRun = Just "run|console|r1" }
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "Loading the graph…" ]
+            , test "a space and a run are buttons, so the keyboard reaches them" <|
+                \_ ->
+                    let
+                        html =
+                            App.view modelWithSession |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.tag "button", Selector.class "nav-item" ]
+                        , \_ -> html |> Query.has [ Selector.tag "button", Selector.class "mnemo-run" ]
+                        ]
+                        ()
             , test "a stale run list stays visible beside the notice" <|
                 \_ ->
                     let
