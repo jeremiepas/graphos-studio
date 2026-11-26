@@ -1,0 +1,67 @@
+{
+  "live": true,
+  "last_heartbeat": "2026-11-26T22:25:08Z",
+  "sequence": 42,
+  "held": 1,
+  "launched": 1,
+  "left_to_person": 4,
+  "causes": ["decided", "granted"],
+  "runs": [
+    {
+      "run": "held-run",
+      "status": "running",
+      "word": "held",
+      "reason": "a process works on it",
+      "log_file": null
+    },
+    {
+      "run": "moves-run",
+      "status": "waiting",
+      "word": "moves",
+      "reason": "the cause decided",
+      "log_file": null
+    },
+    {
+      "run": "later-run",
+      "status": "waiting",
+      "word": "later",
+      "reason": "the back-off of unreachable has not passed: due at 2026-11-26T22:35:08Z",
+      "log_file": null
+    },
+    {
+      "run": "waits-run",
+      "status": "waiting",
+      "word": "waits",
+      "reason": "step approve-s3 waits for an approval",
+      "log_file": null
+    },
+    {
+      "run": "failed-run",
+      "status": "failed",
+      "word": "failed",
+      "reason": "step code failed: exit_code: 127",
+      "log_file": null
+    },
+    {
+      "run": "remediation-run",
+      "status": "waiting",
+      "word": "remediation",
+      "reason": "the launches of this run did not take",
+      "log_file": "/home/console/.local/state/mnemo/orchestrator/console/remediation-run.log"
+    },
+    {
+      "run": "off-run",
+      "status": "stopped",
+      "word": "off",
+      "reason": "the run is not moved: no cause applies",
+      "log_file": null
+    },
+    {
+      "run": "queued-run",
+      "status": "waiting",
+      "word": "queued",
+      "reason": "a queue added in a later slice holds it",
+      "log_file": null
+    }
+  ]
+}

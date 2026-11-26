@@ -59,7 +59,8 @@ else:
     print("DRIFT: graph.json != Fixtures.fixtureJson", file=sys.stderr)
     sys.exit(1)
 
-# `mnemo-workbench`: the five console API fixtures are copied into
+# `mnemo-workbench` and `mnemo-orchestrator-view`: the console API fixtures and
+# the recorded `mnemo orchestrate status --json` answers are copied into
 # tests/Mnemo/fixtures/ and embedded in tests/Mnemo/Fixtures.elm, because
 # elm-test cannot read files.
 MNEMO_FIXTURES = "tests/Mnemo/Fixtures.elm"
@@ -69,6 +70,10 @@ mnemo = [
     ("run", "runJson"),
     ("graph", "graphJson"),
     ("step-run", "stepRunJson"),
+    ("orchestrator/live", "orchestratorLiveJson"),
+    ("orchestrator/gone", "orchestratorGoneJson"),
+    ("orchestrator/never", "orchestratorNeverJson"),
+    ("orchestrator/words-derived", "orchestratorWordsJson"),
 ]
 
 mnemo_text = open(MNEMO_FIXTURES).read()

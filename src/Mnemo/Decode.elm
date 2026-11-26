@@ -3,6 +3,8 @@ module Mnemo.Decode exposing
     , Graph
     , GraphEdge
     , GraphNode
+    , Orchestrator
+    , OrchestratorRun
     , Run
     , RunDetail
     , Session
@@ -12,6 +14,7 @@ module Mnemo.Decode exposing
     , Tokens
     , cardItemDecoder
     , graphDecoder
+    , orchestratorDecoder
     , runDecoder
     , runDetailDecoder
     , runsDecoder
@@ -116,6 +119,32 @@ type alias CardItem =
     , tier : Maybe Int
     , score : Maybe Float
     , reason : Maybe String
+    }
+
+
+{-| The content of `mnemo orchestrate status --json`, plus the `digest` a
+console route adds. The command has no field for the workflow of a run, its
+cap of runs or a due time of its own; the page joins the workflow from
+`/api/runs` and shows a due time only when the reason carries it.
+-}
+type alias Orchestrator =
+    { live : Bool
+    , lastHeartbeat : Maybe String
+    , sequence : Maybe Int
+    , held : Maybe Int
+    , launched : Maybe Int
+    , leftToPerson : Maybe Int
+    , causes : List String
+    , runs : List OrchestratorRun
+    }
+
+
+type alias OrchestratorRun =
+    { run : String
+    , status : String
+    , word : String
+    , reason : String
+    , logFile : Maybe String
     }
 
 
@@ -225,3 +254,26 @@ cardItemDecoder =
         (D.maybe (D.field "tier" D.int))
         (D.maybe (D.field "score" D.float))
         (D.maybe (D.field "reason" D.string))
+
+
+orchestratorRunDecoder : Decoder OrchestratorRun
+orchestratorRunDecoder =
+    D.map5 OrchestratorRun
+        (D.field "run" D.string)
+        (D.field "status" D.string)
+        (D.field "word" D.string)
+        (D.field "reason" D.string)
+        (D.maybe (D.field "log_file" D.string))
+
+
+orchestratorDecoder : Decoder Orchestrator
+orchestratorDecoder =
+    D.map8 Orchestrator
+        (D.field "live" D.bool)
+        (D.maybe (D.field "last_heartbeat" D.string))
+        (D.maybe (D.field "sequence" D.int))
+        (D.maybe (D.field "held" D.int))
+        (D.maybe (D.field "launched" D.int))
+        (D.maybe (D.field "left_to_person" D.int))
+        (D.field "causes" (D.list D.string))
+        (D.field "runs" (D.list orchestratorRunDecoder))

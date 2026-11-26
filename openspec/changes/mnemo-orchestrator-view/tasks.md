@@ -8,15 +8,15 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 
 ## 1. The contract and the baseline
 
-- [ ] 1.1 Record in `verification.md` the Mnemo pin of the dev stack, that its build refuses `mnemo orchestrate status`, and the commit of `poc-graphos` that first has the command.
-- [ ] 1.2 Build Mnemo from `main` of `poc-graphos` outside this repository, and in a space made for it record the output of `mnemo orchestrate status --json` (and its exit code) for: an orchestrator that holds the space; none, after one ran; a space never held; and runs that carry each of the seven words. Copy the outputs into `tests/Mnemo/fixtures/orchestrator/`, and write in `verification.md` the fields the JSON holds and the ones the text output has and the JSON has not. A word that could not be produced is listed there, and its fixture is derived from a recorded one with the word changed, and named so.
+- [x] 1.1 Record in `verification.md` the Mnemo pin of the dev stack, that its build refuses `mnemo orchestrate status`, and the commit of `poc-graphos` that first has the command.
+- [x] 1.2 Build Mnemo from `main` of `poc-graphos` outside this repository, and in a space made for it record the output of `mnemo orchestrate status --json` (and its exit code) for: an orchestrator that holds the space; none, after one ran; a space never held; and runs that carry each of the seven words. Copy the outputs into `tests/Mnemo/fixtures/orchestrator/`, and write in `verification.md` the fields the JSON holds and the ones the text output has and the JSON has not. A word that could not be produced is listed there, and its fixture is derived from a recorded one with the word changed, and named so.
 - [ ] 1.3 A person's step, in `poc-graphos`: propose the route that serves this state under `/api` (its path, its `digest`, the session, the selected space). Record its name here and replace the assumed path of decision 2.
 - [ ] 1.4 A person's step: over one week of work in the `graphos-studio` space, note each time a run stayed `waiting` after its decision and how it was noticed. Record the count and the notes as the baseline of the hypothesis.
 
 ## 2. The decoder
 
-- [ ] 2.1 Checks first: one decoder test per fixture of 1.2, a test that a renamed field fails the decoder (scenario *A changed shape*), and a test that an unknown word decodes to a word shown as given.
-- [ ] 2.2 Add the types and the decoder to `src/Mnemo/Decode.elm` and the read to `src/Mnemo/Api.elm`; make 2.1 pass.
+- [x] 2.1 Checks first: one decoder test per fixture of 1.2, a test that a renamed field fails the decoder (scenario *A changed shape*), and a test that an unknown word decodes to a word shown as given.
+- [x] 2.2 Add the types and the decoder to `src/Mnemo/Decode.elm` and the read to `src/Mnemo/Api.elm`; make 2.1 pass.
 
 ## 3. Who holds the space, and the last heartbeat
 
