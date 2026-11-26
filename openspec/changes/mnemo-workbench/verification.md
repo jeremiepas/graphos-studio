@@ -23,12 +23,12 @@ Result:
 
 ```
 TEST RUN PASSED
-Duration: 250 ms
-Passed:   137
+Duration: 251 ms
+Passed:   140
 Failed:   0
 ```
 
-The 137 tests include the 33 new `Mnemo.*` tests: the five decoders and a
+The 140 tests include the 36 new `Mnemo.*` tests: the five decoders and a
 renamed field, the grouping and ordering, the token formatting, the graph
 layout (layers, positions, branch/join, implied edges), the status-to-token
 mapping, the session and selection update, and the loading, empty, stale,

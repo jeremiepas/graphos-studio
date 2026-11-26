@@ -144,7 +144,7 @@ offers a retry; a `401` says the session expired.
 | `public/` | `index.html`, `ports.js` (renderer handle + localStorage only), vendored vis-network |
 | `public/mnemo/` | the Mnemo page's `index.html`, `boot.js` and built `mnemo.js` |
 | `assets/viewer/` | static HTML viewer assets (`viewer.css`, `viewer.js`, vendored vis-network) served by `graphos serve` |
-| `tests/` | 104 elm-tests: navigation invariants, codecs, editing, groups, scope |
+| `tests/` | 140 elm-tests: navigation invariants, codecs, editing, groups, scope, the Mnemo page |
 | `review/` | `elm-review` configuration (`NoUnused.Variables`, `Simplify`), run by CI |
 | `.scripts/fixture-drift-check.sh` | fails when `tests/fixtures/graph.json` and `Fixtures.fixtureJson` diverge |
 | `openspec-view/` | base-only Haskell package behind `graphos view` (change list, artifacts, spec diff, dashboard) |
