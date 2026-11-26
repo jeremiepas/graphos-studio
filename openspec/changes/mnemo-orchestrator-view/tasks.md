@@ -41,7 +41,7 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 ## 7. Design system, keyboard and documentation
 
 - [x] 7.1 Checks first: the scenarios *Keyboard* and *A colour literal* of *The view follows the design system and is tested*, and one test per state of the view (loading, live, gone, never held, not served, stale, session expired). Then use the components of `Studio.DesignSystem`; make them pass.
-- [ ] 7.2 Check first: a grep of `README.md` for the orchestrator view (none before the edit). Then the README: the view, the seven words, that it controls nothing, and that it shows "not served" until the console has the route.
+- [x] 7.2 Check first: a grep of `README.md` for the orchestrator view (none before the edit). Then the README: the view, the seven words, that it controls nothing, and that it shows "not served" until the console has the route.
 
 ## 8. The live check
 
