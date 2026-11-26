@@ -52,6 +52,7 @@ type alias Model =
     , graph : Maybe Graph
     , graphNotice : Maybe String
     , stepRun : Maybe StepRunDetail
+    , stepRunKey : Maybe String
     , stepRunNotice : Maybe String
     }
 
@@ -73,6 +74,7 @@ initialModel =
     , graph = Nothing
     , graphNotice = Nothing
     , stepRun = Nothing
+    , stepRunKey = Nothing
     , stepRunNotice = Nothing
     }
 
@@ -153,6 +155,7 @@ update msg model =
                 , graph = Nothing
                 , graphNotice = Nothing
                 , stepRun = Nothing
+                , stepRunKey = Nothing
                 , stepRunNotice = Nothing
               }
             , Api.getRuns GotRuns
@@ -233,6 +236,7 @@ update msg model =
                     , graph = if cached then model.graph else Nothing
                     , graphNotice = Nothing
                     , stepRun = Nothing
+                    , stepRunKey = Nothing
                     , stepRunNotice = Nothing
                   }
                 , Cmd.batch
@@ -287,7 +291,9 @@ update msg model =
             )
 
         OpenStepRun key ->
-            ( model, Api.getStepRun key GotStepRun )
+            ( { model | stepRunKey = Just key, stepRunNotice = Nothing }
+            , Api.getStepRun key GotStepRun
+            )
 
         GotStepRun (Ok detail) ->
             ( { model | stepRun = Just detail, stepRunNotice = Nothing }
@@ -346,9 +352,21 @@ update msg model =
 
                         ( Nothing, _ ) ->
                             []
+
+                stepRunCommand =
+                    case model.stepRunKey of
+                        Just key ->
+                            if model.session == Nothing || model.sessionExpired then
+                                []
+
+                            else
+                                [ Api.getStepRun key GotStepRun ]
+
+                        Nothing ->
+                            []
             in
             ( clearNotices model
-            , Cmd.batch (runsCommand ++ detailCommand ++ graphCommand)
+            , Cmd.batch (runsCommand ++ detailCommand ++ graphCommand ++ stepRunCommand)
             )
 
 
@@ -435,9 +453,9 @@ viewHeader model =
                 else
                     []
                )
-            ++ List.filterMap (Maybe.map (notice "mnemo-notice"))
-                [ model.sessionNotice
-                , model.selectionNotice
+            ++ List.filterMap identity
+                [ Maybe.map (notice "mnemo-notice-error") model.sessionNotice
+                , Maybe.map (notice "mnemo-notice") model.selectionNotice
                 ]
         )
 
@@ -473,7 +491,13 @@ viewRuns model =
             |> Maybe.withDefault (text "")
         )
             :: (if List.isEmpty model.runs then
-                    [ if model.runsLoading then
+                    [ if model.session == Nothing then
+                        UI.emptyState "No session."
+
+                      else if model.sessionExpired then
+                        text ""
+
+                      else if model.runsLoading then
                         UI.emptyState "Loading runs…"
 
                       else if model.runsNotice == Nothing then
