@@ -1,0 +1,16 @@
+{
+  "graphos": {
+    "kind": "release",
+    "repo": "jeremiepas/Graphos",
+    "version": "v0.3.0",
+    "asset": "graphos-linux-x86_64",
+    "sha256": "c3894f8614c3458431ccb04d2ada29ec54aa130be4603156e89b637e81000892"
+  },
+  "mnemo": {
+    "kind": "source",
+    "repo": "jeremiepas/poc-graphos",
+    "rev": "d5d7b6e3cb66e46b8cc52d854cdd00e083b36cbe",
+    "subdir": "mnemo",
+    "version": "0.1.0.0"
+  }
+}
