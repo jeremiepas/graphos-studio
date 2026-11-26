@@ -25,8 +25,8 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 
 ## 4. The word and the reason of each run
 
-- [ ] 4.1 Checks first: the label and the explanation of each of the seven words as pure functions, and the seven scenarios of *Every run that is not final has one word and its reason* (the unknown word, the path of the output file as a text, the link to the run, nothing to move).
-- [ ] 4.2 Add the list (decision 4); make 4.1 pass.
+- [x] 4.1 Checks first: the label and the explanation of each of the seven words as pure functions, and the seven scenarios of *Every run that is not final has one word and its reason* (the unknown word, the path of the output file as a text, the link to the run, nothing to move).
+- [x] 4.2 Add the list (decision 4); make 4.1 pass.
 
 ## 5. The word in the run list
 

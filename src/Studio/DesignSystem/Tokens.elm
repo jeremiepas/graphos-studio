@@ -442,6 +442,14 @@ stylesheet theme =
         , rule ".mnemo-orchestrator" ("margin-bottom:" ++ px t.s4)
         , rule ".mnemo-orchestrator-state" ("font-size:" ++ px t.fontSm ++ ";font-weight:600;color:" ++ t.text ++ ";margin-bottom:" ++ px t.s1)
         , rule ".mnemo-orchestrator-heartbeat" ("font-size:" ++ px t.fontSm ++ ";color:" ++ t.text)
+        , rule ".mnemo-orchestrator-run"
+            ("background:" ++ t.surface ++ ";border:1px solid " ++ t.border ++ ";border-radius:" ++ px t.radiusMd ++ ";padding:" ++ px t.s2 ++ " " ++ px t.s3 ++ ";margin-top:" ++ px t.s2)
+        , rule ".mnemo-orchestrator-badges" "display:inline-flex;align-items:center;gap:6px"
+        , rule ".mnemo-orchestrator-reason" ("font-size:" ++ px t.fontSm ++ ";color:" ++ t.text ++ ";margin-top:" ++ px t.s1)
+        , rule ".mnemo-orchestrator-log" ("font-size:" ++ px t.fontXs ++ ";color:" ++ t.textMuted ++ ";margin-top:" ++ px t.s1)
+        , rule ".mnemo-copy"
+            ("font-family:monospace;background:" ++ t.surfaceAlt ++ ";border:1px solid " ++ t.border ++ ";border-radius:" ++ px t.radiusSm ++ ";padding:0 " ++ px t.s1 ++ ";user-select:all")
+        , rule ".mnemo-orchestrator-open" ("margin-top:" ++ px t.s2)
         , rule ".mnemo-notice"
             ("display:flex;align-items:center;gap:" ++ px t.s2 ++ ";padding:" ++ px t.s2 ++ " " ++ px t.s3 ++ ";margin-bottom:" ++ px t.s3 ++ ";background:" ++ t.surfaceAlt ++ ";border:1px solid " ++ t.border ++ ";border-left:3px solid " ++ t.warning ++ ";border-radius:" ++ px t.radiusSm ++ ";font-size:" ++ px t.fontSm)
         , rule ".mnemo-notice-error" ("border-left-color:" ++ t.danger)

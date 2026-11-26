@@ -14,7 +14,7 @@ The session holds the selected space; the only write is its selection.
 -}
 
 import Dict
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, code, div, span, text)
 import Html.Attributes as A
 import Html.Events as Ev
 import Json.Decode as D
@@ -629,7 +629,86 @@ viewOrchestratorReport model staleReadAt orchestrator =
                             )
                         ]
                    ]
+                ++ viewOrchestratorRuns model orchestrator
            )
+
+
+viewOrchestratorRuns : Model -> Orchestrator -> List (Html Msg)
+viewOrchestratorRuns model orchestrator =
+    if List.isEmpty orchestrator.runs then
+        [ UI.emptyState "No run is left to move." ]
+
+    else
+        List.map (viewOrchestratorRun model) orchestrator.runs
+
+
+viewOrchestratorRun : Model -> Decode.OrchestratorRun -> Html Msg
+viewOrchestratorRun model run =
+    let
+        key =
+            fullKeyFor model.runs run.run
+
+        workflow =
+            workflowFor model.runs run.run
+    in
+    div [ A.class "mnemo-orchestrator-run" ]
+        ([ div [ A.class "mnemo-run-head" ]
+            [ span [ A.class "mnemo-run-title", A.title run.run ] [ text run.run ]
+            , span [ A.class "mnemo-orchestrator-badges" ]
+                [ statusBadge run.status
+                , span [ A.title run.reason ]
+                    [ UI.badge (Orchestrator.toneKey run.word) (Orchestrator.labelWord run.word) ]
+                ]
+            ]
+         , div [ A.class "mnemo-run-meta" ]
+            [ text
+                ((Maybe.withDefault "workflow unknown" workflow)
+                    ++ " · "
+                    ++ run.status
+                    ++ " · "
+                    ++ Orchestrator.labelWord run.word
+                )
+            ]
+         , div [ A.class "mnemo-orchestrator-reason" ] [ text run.reason ]
+         , div [ A.class "mnemo-run-meta" ] [ text (Orchestrator.wordExplanation run.word) ]
+         ]
+            ++ (case run.logFile of
+                    Nothing ->
+                        []
+
+                    Just path ->
+                        [ div [ A.class "mnemo-orchestrator-log" ]
+                            [ text "Output file: "
+                            , code [ A.class "mnemo-copy" ] [ text path ]
+                            ]
+                        ]
+               )
+            ++ [ div [ A.class "mnemo-orchestrator-open" ]
+                    [ UI.btn { label = "Open run", enabled = True, onPress = SelectRun key } ]
+               ]
+        )
+
+
+workflowFor : List Run -> String -> Maybe String
+workflowFor runs name =
+    runs
+        |> List.filter (runMatches name)
+        |> List.head
+        |> Maybe.map .workflow
+
+
+fullKeyFor : List Run -> String -> String
+fullKeyFor runs name =
+    runs
+        |> List.filter (runMatches name)
+        |> List.head
+        |> Maybe.map .key
+        |> Maybe.withDefault name
+
+
+runMatches : String -> Run -> Bool
+runMatches name run =
+    run.key == name || Orchestrator.localName run.key == name
 
 
 staleLine : Maybe Time.Posix -> List (Html Msg)

@@ -9,11 +9,12 @@ reaches a console or an orchestrator.
 import Expect
 import Json.Decode as D
 import Mnemo.App as App
-import Mnemo.Decode as Decode exposing (Orchestrator, Session)
+import Mnemo.Decode as Decode exposing (Orchestrator, Run, Session)
 import Mnemo.Fixtures as Fixtures
 import Mnemo.Format as Format
 import Mnemo.Orchestrator as Orchestrator
 import Test exposing (Test, describe, test)
+import Test.Html.Event as Event
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
 import Time
@@ -23,6 +24,12 @@ session : Session
 session =
     D.decodeString Decode.sessionDecoder Fixtures.sessionJson
         |> Result.withDefault (Session "console" [ "console" ] 2 "csrf")
+
+
+runsFixture : List Run
+runsFixture =
+    D.decodeString Decode.runsDecoder Fixtures.runsJson
+        |> Result.withDefault []
 
 
 at : Int -> Time.Posix
@@ -85,6 +92,15 @@ model report =
         , now = now
         , orchestrator = Orchestrator.Loaded { report = report, readAt = now }
     }
+
+
+modelWithRuns : Orchestrator -> List Run -> App.Model
+modelWithRuns report runs =
+    let
+        base =
+            model report
+    in
+    { base | runs = runs }
 
 
 oldModel : Orchestrator -> App.Model
@@ -179,6 +195,128 @@ suite =
                     App.view updated
                         |> Query.fromHtml
                         |> Query.has [ Selector.text "0 launched" ]
+            ]
+        , describe "the word and the reason of each run" <|
+            [ test "every known word has a label and an explanation" <|
+                \_ ->
+                    Expect.all
+                        [ \_ ->
+                            Expect.equal
+                                [ "Held", "Moves", "Later", "Waits", "Failed", "Remediation", "Off" ]
+                                (List.map Orchestrator.labelWord
+                                    [ "held", "moves", "later", "waits", "failed", "remediation", "off" ]
+                                )
+                        , \_ ->
+                            Expect.equal
+                                [ True, True, True, True, True, True, True ]
+                                (List.map (\word -> String.length (Orchestrator.wordExplanation word) > 20)
+                                    [ "held", "moves", "later", "waits", "failed", "remediation", "off" ]
+                                )
+                        ]
+                        ()
+            , test "three runs carry waits, failed and remediation with their reasons" <|
+                \_ ->
+                    let
+                        html =
+                            App.view (model words) |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.text "waits" ]
+                        , \_ -> html |> Query.has [ Selector.text "step approve-s3 waits for an approval" ]
+                        , \_ -> html |> Query.has [ Selector.text "failed" ]
+                        , \_ -> html |> Query.has [ Selector.text "step code failed: exit_code: 127" ]
+                        , \_ -> html |> Query.has [ Selector.text "remediation" ]
+                        , \_ -> html |> Query.has [ Selector.text "the launches of this run did not take" ]
+                        , \_ ->
+                            html
+                                |> Query.has
+                                    [ Selector.text "/home/console/.local/state/mnemo/orchestrator/console/remediation-run.log" ]
+                        ]
+                        ()
+            , test "a run that moves names its cause" <|
+                \_ ->
+                    App.view (model words)
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "the cause decided" ]
+            , test "a run that is due later names its due time" <|
+                \_ ->
+                    App.view (model words)
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "due at 2026-11-26T22:35:08Z" ]
+            , test "no orchestrator gives off with the reason the console gives" <|
+                \_ ->
+                    let
+                        report =
+                            { words
+                                | live = False
+                                , runs =
+                                    [ { run = "decided-run"
+                                      , status = "waiting"
+                                      , word = "off"
+                                      , reason = "no orchestrator holds the space"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (model report)
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "no orchestrator holds the space" ]
+            , test "a word the page does not know is shown as given with its reason" <|
+                \_ ->
+                    let
+                        html =
+                            App.view (model words) |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.text "queued" ]
+                        , \_ -> html |> Query.has [ Selector.text "a queue added in a later slice holds it" ]
+                        ]
+                        ()
+            , test "nothing to move says so" <|
+                \_ ->
+                    App.view (model { live | runs = [] })
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "No run is left to move." ]
+            , test "a line shows the workflow from the run list" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "r1"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "dev-plan" ]
+            , test "the link of a line selects the run in the runs view" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "r1"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.find [ Selector.class "mnemo-orchestrator-open" ]
+                        |> Query.find [ Selector.tag "button" ]
+                        |> Event.simulate Event.click
+                        |> Event.expect (App.SelectRun "run|console|r1")
             ]
         , describe "the clock" <|
             [ test "an ISO time gives milliseconds and survives a round trip" <|
