@@ -1,6 +1,7 @@
 module Mnemo.Api exposing
     ( Error(..)
     , getGraph
+    , getOrchestrator
     , getRun
     , getRuns
     , getSession
@@ -16,7 +17,7 @@ session's `X-CSRF-Token`.
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Mnemo.Decode as Decode exposing (Graph, Run, RunDetail, Session, StepRunDetail)
+import Mnemo.Decode as Decode exposing (Graph, Orchestrator, Run, RunDetail, Session, StepRunDetail)
 import Url
 
 
@@ -75,6 +76,18 @@ getRuns toMsg =
     Http.get
         { url = "/api/runs"
         , expect = expectJson Decode.runsDecoder toMsg
+        }
+
+
+{-| The console's one read of the orchestrator's state: the content of
+`mnemo orchestrate status --json` for the selected space. A console that does
+not serve it answers `404`, which the page shows as "not served".
+-}
+getOrchestrator : (Result Error Orchestrator -> msg) -> Cmd msg
+getOrchestrator toMsg =
+    Http.get
+        { url = "/api/orchestrator"
+        , expect = expectJson Decode.orchestratorDecoder toMsg
         }
 
 

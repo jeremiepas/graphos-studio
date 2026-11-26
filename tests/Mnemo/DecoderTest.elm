@@ -102,4 +102,66 @@ suite =
 
                     Ok _ ->
                         Expect.fail "a renamed workflow field still decoded"
+        , describe "orchestrator"
+            [ test "a live orchestrator: state, heartbeat, counts and causes" <|
+                \_ ->
+                    case decode Decode.orchestratorDecoder Fixtures.orchestratorLiveJson of
+                        Err err ->
+                            Expect.fail err
+
+                        Ok report ->
+                            Expect.all
+                                [ \_ -> Expect.equal True report.live
+                                , \_ -> Expect.equal (Just "2026-11-26T22:25:08Z") report.lastHeartbeat
+                                , \_ -> Expect.equal (Just 1) report.sequence
+                                , \_ -> Expect.equal [ "decided", "granted" ] report.causes
+                                ]
+                                ()
+            , test "none after one ran: the heartbeat stays, the state is not live" <|
+                \_ ->
+                    case decode Decode.orchestratorDecoder Fixtures.orchestratorGoneJson of
+                        Err err ->
+                            Expect.fail err
+
+                        Ok report ->
+                            Expect.equal
+                                ( False, Just "2026-11-26T22:25:08Z", Just 1 )
+                                ( report.live, report.lastHeartbeat, report.sequence )
+            , test "a space never held: no heartbeat and no counts" <|
+                \_ ->
+                    case decode Decode.orchestratorDecoder Fixtures.orchestratorNeverJson of
+                        Err err ->
+                            Expect.fail err
+
+                        Ok report ->
+                            Expect.all
+                                [ \_ -> Expect.equal False report.live
+                                , \_ -> Expect.equal Nothing report.lastHeartbeat
+                                , \_ -> Expect.equal Nothing report.held
+                                , \_ -> Expect.equal [] report.runs
+                                ]
+                                ()
+            , test "a list of the seven words and one the page does not know" <|
+                \_ ->
+                    case decode Decode.orchestratorDecoder Fixtures.orchestratorWordsJson of
+                        Err err ->
+                            Expect.fail err
+
+                        Ok report ->
+                            Expect.equal
+                                [ "held", "moves", "later", "waits", "failed", "remediation", "off", "queued" ]
+                                (List.map .word report.runs)
+            , test "a renamed field of the orchestrator fails the decoder" <|
+                \_ ->
+                    let
+                        renamed =
+                            String.replace "\"live\"" "\"alive\"" Fixtures.orchestratorLiveJson
+                    in
+                    case decode Decode.orchestratorDecoder renamed of
+                        Err _ ->
+                            Expect.pass
+
+                        Ok _ ->
+                            Expect.fail "a renamed live field still decoded"
+            ]
         ]

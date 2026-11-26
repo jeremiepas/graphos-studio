@@ -14,21 +14,23 @@ The session holds the selected space; the only write is its selection.
 -}
 
 import Dict
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, code, div, span, text)
 import Html.Attributes as A
 import Html.Events as Ev
 import Json.Decode as D
 import Mnemo.Api as Api
-import Mnemo.Decode as Decode exposing (Graph, Run, RunDetail, Session, StepRunDetail)
+import Mnemo.Decode as Decode exposing (Graph, Orchestrator, Run, RunDetail, Session, StepRunDetail)
 import Mnemo.Format as Format
 import Mnemo.Grouping as Grouping
 import Mnemo.Layout as Layout
+import Mnemo.Orchestrator as Orchestrator
 import Mnemo.Status as Status
 import Studio.DesignSystem.Components as UI
 import Studio.DesignSystem.Tokens as Tokens exposing (Theme(..))
 import Svg
 import Svg.Attributes as SA
 import Svg.Events as SE
+import Task
 import Time
 
 
@@ -54,6 +56,8 @@ type alias Model =
     , stepRun : Maybe StepRunDetail
     , stepRunKey : Maybe String
     , stepRunNotice : Maybe String
+    , now : Time.Posix
+    , orchestrator : Orchestrator.State
     }
 
 
@@ -76,6 +80,8 @@ initialModel =
     , stepRun = Nothing
     , stepRunKey = Nothing
     , stepRunNotice = Nothing
+    , now = Time.millisToPosix 0
+    , orchestrator = Orchestrator.Loading
     }
 
 
@@ -88,7 +94,9 @@ type Msg
     | GotSpace (Result Api.Error Session)
     | SelectSpace String
     | GotRuns (Result Api.Error (List Run))
-    | Poll
+    | GotOrchestrator Time.Posix (Result Api.Error Orchestrator)
+    | FetchOrchestrator Time.Posix
+    | Poll Time.Posix
     | SelectRun String
     | GotRun (Result Api.Error RunDetail)
     | GotGraph (Result Api.Error Graph)
@@ -115,8 +123,9 @@ update msg model =
                 , sessionNotice = Nothing
                 , sessionExpired = False
                 , runsLoading = True
+                , orchestrator = Orchestrator.Loading
               }
-            , Api.getRuns GotRuns
+            , Cmd.batch [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
             )
 
         GotSession (Err Api.Unauthorized) ->
@@ -157,8 +166,9 @@ update msg model =
                 , stepRun = Nothing
                 , stepRunKey = Nothing
                 , stepRunNotice = Nothing
+                , orchestrator = Orchestrator.Loading
               }
-            , Api.getRuns GotRuns
+            , Cmd.batch [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
             )
 
         GotSpace (Err Api.Unauthorized) ->
@@ -201,15 +211,63 @@ update msg model =
             , Cmd.none
             )
 
-        Poll ->
+        FetchOrchestrator posix ->
+            ( { model | now = posix }
+            , Api.getOrchestrator (GotOrchestrator posix)
+            )
+
+        GotOrchestrator readAt (Ok report) ->
+            ( { model
+                | now = readAt
+                , orchestrator = Orchestrator.Loaded { report = report, readAt = readAt }
+              }
+            , Cmd.none
+            )
+
+        GotOrchestrator _ (Err Api.Unauthorized) ->
+            ( { model | sessionExpired = True }
+            , Cmd.none
+            )
+
+        GotOrchestrator _ (Err Api.NotFound) ->
+            ( { model | orchestrator = Orchestrator.NotServed }
+            , Cmd.none
+            )
+
+        GotOrchestrator readAt (Err err) ->
+            let
+                message =
+                    describeError "/api/orchestrator" err
+            in
+            ( { model
+                | orchestrator =
+                    case model.orchestrator of
+                        Orchestrator.Loaded loaded ->
+                            Orchestrator.Stale
+                                { report = Just loaded.report
+                                , readAt = loaded.readAt
+                                , notice = message ++ " The last state stays."
+                                }
+
+                        Orchestrator.Stale stale ->
+                            Orchestrator.Stale { stale | notice = message ++ " The last state stays." }
+
+                        _ ->
+                            Orchestrator.Stale { report = Nothing, readAt = readAt, notice = message }
+              }
+            , Cmd.none
+            )
+
+        Poll posix ->
             case model.session of
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( { model | now = posix }, Cmd.none )
 
                 Just _ ->
-                    ( model
+                    ( { model | now = posix }
                     , Cmd.batch
                         (Api.getRuns GotRuns
+                            :: Api.getOrchestrator (GotOrchestrator posix)
                             :: (case model.selectedRun of
                                     Just key ->
                                         [ Api.getRun key GotRun ]
@@ -320,7 +378,7 @@ update msg model =
                         [ Api.getSession GotSession ]
 
                     else
-                        [ Api.getRuns GotRuns ]
+                        [ Api.getRuns GotRuns, Task.perform FetchOrchestrator Time.now ]
 
                 detailCommand =
                     case model.selectedRun of
@@ -409,7 +467,7 @@ subscriptions model =
     else
         case model.session of
             Just session ->
-                Time.every (toFloat (max 1 session.poll) * 1000) (\_ -> Poll)
+                Time.every (toFloat (max 1 session.poll) * 1000) Poll
 
             Nothing ->
                 Sub.none
@@ -447,6 +505,15 @@ viewHeader model =
                 )
             ]
          ]
+            ++ (case model.session of
+                    Just _ ->
+                        [ span [ A.class "muted", A.id "orchestrator-state" ]
+                            [ text (" · " ++ Orchestrator.stateText model.orchestrator) ]
+                        ]
+
+                    Nothing ->
+                        []
+               )
             ++ (if model.sessionExpired then
                     [ notice "mnemo-notice-error" "The session expired. Reopen the one-time URL the console printed to start a new one." ]
 
@@ -487,9 +554,10 @@ viewSpaces model =
 viewRuns : Model -> Html Msg
 viewRuns model =
     div [ A.class "mnemo-runs" ] <|
-        (Maybe.map (notice "mnemo-notice") model.runsNotice
-            |> Maybe.withDefault (text "")
-        )
+        viewOrchestrator model
+            :: (Maybe.map (notice "mnemo-notice") model.runsNotice
+                    |> Maybe.withDefault (text "")
+               )
             :: (if List.isEmpty model.runs then
                     [ if model.session == Nothing then
                         UI.emptyState "No session."
@@ -508,20 +576,237 @@ viewRuns model =
                     ]
 
                 else
-                    List.map (viewGroup model.selectedRun) (Grouping.groupRuns model.runs)
+                    List.map (viewGroup model.selectedRun (runListWords model)) (Grouping.groupRuns model.runs)
                )
 
 
-viewGroup : Maybe String -> Grouping.WorkflowGroup -> Html Msg
-viewGroup selectedRun group =
+{-| The run list shows a word only from a served, decoded answer: a console
+without the route, and a failed read, leave every row as it was.
+-}
+runListWords : Model -> List Decode.OrchestratorRun
+runListWords model =
+    case model.orchestrator of
+        Orchestrator.Loaded loaded ->
+            loaded.report.runs
+
+        _ ->
+            []
+
+
+
+viewOrchestrator : Model -> Html Msg
+viewOrchestrator model =
+    div [ A.class "mnemo-orchestrator" ]
+        [ UI.panel "Orchestrator" (viewOrchestratorBody model) ]
+
+
+viewOrchestratorBody : Model -> List (Html Msg)
+viewOrchestratorBody model =
+    case model.session of
+        Nothing ->
+            [ text "" ]
+
+        Just _ ->
+            if model.sessionExpired then
+                [ text "" ]
+
+            else
+                case model.orchestrator of
+                    Orchestrator.Loading ->
+                        [ UI.emptyState "Loading the orchestrator's state…" ]
+
+                    Orchestrator.NotServed ->
+                        [ div [ A.class "mnemo-orchestrator-state" ]
+                            [ text "This console does not serve the orchestrator's state (GET /api/orchestrator)." ]
+                        ]
+
+                    Orchestrator.Stale stale ->
+                        (notice "mnemo-notice" stale.notice)
+                            :: (case stale.report of
+                                    Nothing ->
+                                        []
+
+                                    Just report ->
+                                        viewOrchestratorReport model (Just stale.readAt) report
+                               )
+
+                    Orchestrator.Loaded loaded ->
+                        viewOrchestratorReport model Nothing loaded.report
+
+
+viewOrchestratorReport : Model -> Maybe Time.Posix -> Orchestrator -> List (Html Msg)
+viewOrchestratorReport model staleReadAt orchestrator =
+    div [ A.class "mnemo-orchestrator-state" ]
+        [ text (Orchestrator.sentence orchestrator) ]
+        :: (staleLine staleReadAt
+                ++ viewHeartbeat model orchestrator
+                ++ [ div [ A.class "mnemo-run-meta" ]
+                        [ text
+                            ("Causes: "
+                                ++ (if List.isEmpty orchestrator.causes then
+                                        "none"
+
+                                    else
+                                        String.join ", " orchestrator.causes
+                                   )
+                            )
+                        ]
+                   ]
+                ++ viewOrchestratorRuns model orchestrator
+           )
+
+
+viewOrchestratorRuns : Model -> Orchestrator -> List (Html Msg)
+viewOrchestratorRuns model orchestrator =
+    if List.isEmpty orchestrator.runs then
+        [ UI.emptyState "No run is left to move." ]
+
+    else
+        List.map (viewOrchestratorRun model) orchestrator.runs
+
+
+viewOrchestratorRun : Model -> Decode.OrchestratorRun -> Html Msg
+viewOrchestratorRun model run =
+    let
+        key =
+            fullKeyFor model.runs run.run
+
+        workflow =
+            workflowFor model.runs run.run
+    in
+    div [ A.class "mnemo-orchestrator-run" ]
+        ([ div [ A.class "mnemo-run-head" ]
+            [ span [ A.class "mnemo-run-title", A.title run.run ] [ text run.run ]
+            , span [ A.class "mnemo-orchestrator-badges" ]
+                [ statusBadge run.status
+                , span [ A.title run.reason ]
+                    [ UI.badge (Orchestrator.toneKey run.word) (Orchestrator.labelWord run.word) ]
+                ]
+            ]
+         , div [ A.class "mnemo-run-meta" ]
+            [ text
+                ((Maybe.withDefault "workflow unknown" workflow)
+                    ++ " · "
+                    ++ run.status
+                    ++ " · "
+                    ++ Orchestrator.labelWord run.word
+                )
+            ]
+         , div [ A.class "mnemo-orchestrator-reason" ] [ text run.reason ]
+         , div [ A.class "mnemo-run-meta" ] [ text (Orchestrator.wordExplanation run.word) ]
+         ]
+            ++ (case run.logFile of
+                    Nothing ->
+                        []
+
+                    Just path ->
+                        [ div [ A.class "mnemo-orchestrator-log" ]
+                            [ text "Output file: "
+                            , code [ A.class "mnemo-copy" ] [ text path ]
+                            ]
+                        ]
+               )
+            ++ [ div [ A.class "mnemo-orchestrator-open" ]
+                    [ UI.btn { label = "Open run", enabled = True, onPress = SelectRun key } ]
+               ]
+        )
+
+
+workflowFor : List Run -> String -> Maybe String
+workflowFor runs name =
+    runs
+        |> List.filter (runMatches name)
+        |> List.head
+        |> Maybe.map .workflow
+
+
+fullKeyFor : List Run -> String -> String
+fullKeyFor runs name =
+    runs
+        |> List.filter (runMatches name)
+        |> List.head
+        |> Maybe.map .key
+        |> Maybe.withDefault name
+
+
+runMatches : String -> Run -> Bool
+runMatches name run =
+    run.key == name || Orchestrator.localName run.key == name
+
+
+staleLine : Maybe Time.Posix -> List (Html Msg)
+staleLine staleReadAt =
+    case staleReadAt of
+        Nothing ->
+            []
+
+        Just readAt ->
+            [ div [ A.class "mnemo-run-meta" ]
+                [ text ("Stale: last read " ++ Format.isoFromMillis (Time.posixToMillis readAt) ++ ".") ]
+            ]
+
+
+viewHeartbeat : Model -> Orchestrator -> List (Html Msg)
+viewHeartbeat model orchestrator =
+    case orchestrator.lastHeartbeat of
+        Nothing ->
+            [ div [ A.class "mnemo-run-meta" ] [ text "No heartbeat has been recorded." ] ]
+
+        Just time ->
+            [ div [ A.class "mnemo-orchestrator-heartbeat" ]
+                [ text
+                    ("Last heartbeat "
+                        ++ time
+                        ++ (case Orchestrator.heartbeatAge model.now time of
+                                Just age ->
+                                    " (" ++ age ++ ")"
+
+                                Nothing ->
+                                    ""
+                           )
+                        ++ (case orchestrator.sequence of
+                                Just sequence ->
+                                    ", sequence " ++ String.fromInt sequence
+
+                                Nothing ->
+                                    ""
+                           )
+                    )
+                ]
+            , div [ A.class "mnemo-run-meta" ] [ text (countsText orchestrator) ]
+            ]
+
+
+countsText : Orchestrator -> String
+countsText orchestrator =
+    let
+        count label value =
+            Maybe.map (\number -> String.fromInt number ++ " " ++ label) value
+
+        parts =
+            List.filterMap identity
+                [ count "held" orchestrator.held
+                , count "launched" orchestrator.launched
+                , count "left to a person" orchestrator.leftToPerson
+                ]
+    in
+    if List.isEmpty parts then
+        "The heartbeat records no count."
+
+    else
+        "The heartbeat: " ++ String.join ", " parts ++ "."
+
+
+viewGroup : Maybe String -> List Decode.OrchestratorRun -> Grouping.WorkflowGroup -> Html Msg
+viewGroup selectedRun words group =
     div [ A.class "mnemo-group" ]
         [ div [ A.class "mnemo-group-title" ] [ text group.workflow ]
-        , div [] (List.map (viewRun selectedRun) group.runs)
+        , div [] (List.map (\run -> viewRun selectedRun (Orchestrator.wordFor words run.key) run) group.runs)
         ]
 
 
-viewRun : Maybe String -> Run -> Html Msg
-viewRun selectedRun run =
+viewRun : Maybe String -> Maybe Decode.OrchestratorRun -> Run -> Html Msg
+viewRun selectedRun word run =
     button
         [ A.class
             ("mnemo-run"
@@ -538,7 +823,22 @@ viewRun selectedRun run =
         ]
         [ div [ A.class "mnemo-run-head" ]
             [ span [ A.class "mnemo-run-title", A.title run.key ] [ text run.key ]
-            , statusBadge run.status
+            , span [ A.class "mnemo-orchestrator-badges" ]
+                (statusBadge run.status
+                    :: (case word of
+                            Nothing ->
+                                []
+
+                            Just given ->
+                                if isFinalStatus run.status then
+                                    []
+
+                                else
+                                    [ span [ A.title given.reason ]
+                                        [ UI.badge (Orchestrator.toneKey given.word) (Orchestrator.labelWord given.word) ]
+                                    ]
+                       )
+                )
             ]
         , div [ A.class "mnemo-run-meta" ]
             [ text ("started " ++ run.started)
@@ -843,6 +1143,11 @@ viewStepRun model =
                             Just reason ->
                                 div [ A.class "mnemo-run-meta" ] [ text ("reason " ++ reason) ]
                         ]
+
+
+isFinalStatus : String -> Bool
+isFinalStatus status =
+    status == "passed" || status == "cancelled"
 
 
 statusBadge : String -> Html Msg

@@ -123,10 +123,48 @@ python3 -m http.server --bind 127.0.0.1 -d public 8090   # → http://127.0.0.1:
 
 The page reads `/api/session` (the spaces, the selected space, the poll
 interval and the CSRF token), `/api/runs`, `/api/runs/<run>`,
-`/api/runs/<run>/graph` and `/api/step-runs/<step-run>`. Its only write is
-`POST /api/session/space` with `X-CSRF-Token`; the selection lives in the
-console session, not in the browser. A failed read keeps the last data and
-offers a retry; a `401` says the session expired.
+`/api/runs/<run>/graph`, `/api/step-runs/<step-run>` and `/api/orchestrator`.
+Its only write is `POST /api/session/space` with `X-CSRF-Token`; the selection
+lives in the console session, not in the browser. A failed read keeps the last
+data and offers a retry; a `401` says the session expired.
+
+### Orchestrator view
+
+The orchestrator view (`mnemo-orchestrator-view`) is read-only: it starts,
+stops and configures nothing, and launches no run. For the selected space it
+shows whether an orchestrator holds the space, its last heartbeat (time, age,
+sequence, and how many runs it held, launched and left to a person), and the
+causes it acts on. The same one-line state is in the page header, so it is
+visible from the runs. The age of a heartbeat is shown as an age and never
+changes the state: only the console's lock answer does.
+
+Every run that is not final is listed with its workflow, status, one word and
+the reason Mnemo gives. The word also appears beside the status in the run
+list, with the reason on it.
+
+| Word | What it says |
+|---|---|
+| `held` | a process works on the run |
+| `moves` | the next heartbeat launches it, for the cause named |
+| `later` | it is not due yet; the reason says why and when |
+| `waits` | a step waits for a person's approval or answer |
+| `failed` | a step failed and no grant lets it continue |
+| `remediation` | its launches did not take, or its endpoint stays unreachable |
+| `off` | nothing moves it; the reason says why |
+
+A word the page does not know is shown as the console gives it, with its
+reason, so a word added later does not hide a run. A run in remediation shows
+the path of its launches' output as copyable text; the page never reads the
+file. Each line offers a button that selects its run in the runs view.
+
+The view reads the console's `/api/orchestrator`, which serves the content of
+`mnemo orchestrate status --json`. **Until the console serves that route the
+view says "not served" and shows no state, heartbeat or word**; a `404` never
+becomes "no orchestrator holds the space". A failed poll keeps the last state,
+marked stale with its read time, names the route and offers a retry. The
+recorded answers the tests use, and the fields the command's JSON has and has
+not, are in
+`openspec/changes/mnemo-orchestrator-view/verification.md`.
 
 ## Layout
 

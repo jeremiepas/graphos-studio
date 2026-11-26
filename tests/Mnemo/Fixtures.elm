@@ -1,4 +1,14 @@
-module Mnemo.Fixtures exposing (graphJson, runJson, runsJson, sessionJson, stepRunJson)
+module Mnemo.Fixtures exposing
+    ( graphJson
+    , orchestratorGoneJson
+    , orchestratorLiveJson
+    , orchestratorNeverJson
+    , orchestratorWordsJson
+    , runJson
+    , runsJson
+    , sessionJson
+    , stepRunJson
+    )
 
 {-| The five console API fixtures, copied from the `console-api` and
 `console-spaces` contract. The JSON lives in `tests/Mnemo/fixtures/`; these
@@ -170,5 +180,109 @@ stepRunJson =
     }
   ],
   "digest": "d7e0b3f4"
+}
+"""
+
+
+{-| Recorded on 2026-11-26 by `mnemo orchestrate status --json` (built from
+`main` of `poc-graphos`, commit 45c789b) on a space an `mnemo orchestrate`
+loop held, then on the same space once the loop was interrupted, then on a
+space nothing ever held. The three files are `tests/Mnemo/fixtures/orchestrator/`.
+-}
+orchestratorLiveJson : String
+orchestratorLiveJson =
+    """
+{"causes":["decided","granted"],"held":0,"last_heartbeat":"2026-11-26T22:25:08Z","launched":0,"left_to_person":0,"live":true,"runs":[],"sequence":1}
+"""
+
+
+orchestratorGoneJson : String
+orchestratorGoneJson =
+    """
+{"causes":["decided","granted"],"held":0,"last_heartbeat":"2026-11-26T22:25:08Z","launched":0,"left_to_person":0,"live":false,"runs":[],"sequence":1}
+"""
+
+
+orchestratorNeverJson : String
+orchestratorNeverJson =
+    """
+{"causes":[],"held":null,"last_heartbeat":null,"launched":null,"left_to_person":null,"live":false,"runs":[],"sequence":null}
+"""
+
+
+{-| The seven words and one the command does not know (`queued`), derived from
+the recorded output of the `graphos-studio` space of 2026-11-26. The words
+`moves`, `later` and `remediation` could not be produced on a recorded space;
+`verification.md` lists them and says how this file was derived.
+-}
+orchestratorWordsJson : String
+orchestratorWordsJson =
+    """
+{
+  "live": true,
+  "last_heartbeat": "2026-11-26T22:25:08Z",
+  "sequence": 42,
+  "held": 1,
+  "launched": 1,
+  "left_to_person": 4,
+  "causes": ["decided", "granted"],
+  "runs": [
+    {
+      "run": "held-run",
+      "status": "running",
+      "word": "held",
+      "reason": "a process works on it",
+      "log_file": null
+    },
+    {
+      "run": "moves-run",
+      "status": "waiting",
+      "word": "moves",
+      "reason": "the cause decided",
+      "log_file": null
+    },
+    {
+      "run": "later-run",
+      "status": "waiting",
+      "word": "later",
+      "reason": "the back-off of unreachable has not passed: due at 2026-11-26T22:35:08Z",
+      "log_file": null
+    },
+    {
+      "run": "waits-run",
+      "status": "waiting",
+      "word": "waits",
+      "reason": "step approve-s3 waits for an approval",
+      "log_file": null
+    },
+    {
+      "run": "failed-run",
+      "status": "failed",
+      "word": "failed",
+      "reason": "step code failed: exit_code: 127",
+      "log_file": null
+    },
+    {
+      "run": "remediation-run",
+      "status": "waiting",
+      "word": "remediation",
+      "reason": "the launches of this run did not take",
+      "log_file": "/home/console/.local/state/mnemo/orchestrator/console/remediation-run.log"
+    },
+    {
+      "run": "off-run",
+      "status": "stopped",
+      "word": "off",
+      "reason": "the run is not moved: no cause applies",
+      "log_file": null
+    },
+    {
+      "run": "queued-run",
+      "status": "waiting",
+      "word": "queued",
+      "reason": "a queue added in a later slice holds it",
+      "log_file": null
+    }
+  ]
 }
 """
