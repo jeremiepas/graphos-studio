@@ -6,12 +6,12 @@ page is checked live after those two changes are applied. The graph Studio is no
 
 ## 1. The fixtures and the decoders
 
-- [ ] 1.1 Checks first: one decoder test per route's fixture — `/api/session` (the spaces, the
+- [x] 1.1 Checks first: one decoder test per route's fixture — `/api/session` (the spaces, the
   selected space, the poll, the CSRF token), `/api/runs` (the run's workflow, status, times,
   counts and `tokens.card`/`tokens.prompt`), `/api/runs/<run>` (the board and its step runs),
   `/api/runs/<run>/graph` (nodes, layers, edges, implied) and `/api/step-runs/<step-run>` (the
   status, attempt and card/prompt tokens) — and a test that a renamed field fails the decoder.
-- [ ] 1.2 Copy the five fixtures of the two API changes into `tests/Mnemo/fixtures/` (from their
+- [x] 1.2 Copy the five fixtures of the two API changes into `tests/Mnemo/fixtures/` (from their
   emitted files when they exist; from the contract before), and make 1.1 pass.
 
 ## 2. The second entry and its build

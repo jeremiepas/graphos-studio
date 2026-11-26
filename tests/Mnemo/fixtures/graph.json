@@ -1,0 +1,18 @@
+{
+  "run": "run|console|r1",
+  "workflow": "dev-plan",
+  "nodes": [
+    { "id": "plan", "executor": "llm", "layer": 0, "foreach": false },
+    { "id": "code", "executor": "delegate", "layer": 1, "foreach": true },
+    { "id": "docs", "executor": "command", "layer": 1, "foreach": false },
+    { "id": "gate", "executor": "human", "layer": 2, "foreach": false }
+  ],
+  "edges": [
+    { "from": "plan", "to": "code", "implied": false },
+    { "from": "plan", "to": "docs", "implied": false },
+    { "from": "code", "to": "gate", "implied": false },
+    { "from": "docs", "to": "gate", "implied": false },
+    { "from": "plan", "to": "gate", "implied": true }
+  ],
+  "digest": "5c2a9d10"
+}

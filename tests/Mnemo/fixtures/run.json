@@ -1,0 +1,54 @@
+{
+  "run": {
+    "key": "run|console|r1",
+    "workflow": "dev-plan",
+    "status": "running",
+    "started": "2026-11-26T09:00:00Z",
+    "ended": null,
+    "stopped_by": null,
+    "step_runs": 3,
+    "waiting": 1,
+    "tokens": { "card": 1200, "prompt": 3400 }
+  },
+  "steps": [
+    {
+      "id": "plan",
+      "status": "passed",
+      "reason": null,
+      "step_runs": [
+        {
+          "key": "run|console|r1/plan/1",
+          "item": null,
+          "attempt": 1,
+          "status": "passed",
+          "reason": null,
+          "started": "2026-11-26T09:00:01Z",
+          "ended": "2026-11-26T09:04:12Z"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "status": "running",
+      "reason": null,
+      "step_runs": [
+        {
+          "key": "run|console|r1/code/1",
+          "item": 0,
+          "attempt": 2,
+          "status": "running",
+          "reason": null,
+          "started": "2026-11-26T09:04:20Z",
+          "ended": null
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "status": "waiting",
+      "reason": null,
+      "step_runs": []
+    }
+  ],
+  "digest": "b14e6a02"
+}
