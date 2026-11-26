@@ -144,6 +144,7 @@ in
         elm-test
         elm-review
         .scripts/fixture-drift-check.sh
+        .scripts/mnemo-entry-check.sh
         violations=$(grep -rnE '#[0-9a-fA-F]{6}' src/ --include='*.elm' | grep -v 'DesignSystem/Tokens.elm' || true)
         if [ -n "$violations" ]; then
           echo "Color literals outside Studio.DesignSystem.Tokens:" >&2
@@ -155,6 +156,7 @@ in
         "studio:build@succeeded"
         "studio:test@succeeded"
         "studio:review@succeeded"
+        "mnemo:build@succeeded"
       ];
     };
 

@@ -58,9 +58,9 @@ page is checked live after those two changes are applied. The graph Studio is no
 
 ## 7. The gates and the documentation
 
-- [ ] 7.1 Add `mnemo:build` to `studio:ci` and to `.github/workflows/studio.yml`; run `elm-review`
+- [x] 7.1 Add `mnemo:build` to `studio:ci` and to `.github/workflows/studio.yml`; run `elm-review`
   over `src/Mnemo/`; make the new entry part of the build and test gates.
-- [ ] 7.2 Document the page in the README (the entry, the flag, the routes it reads) and, when
+- [x] 7.2 Document the page in the README (the entry, the flag, the routes it reads) and, when
   `dev-stack/scripts/mnemo.sh` is in `main`, add `--frontend-dir public/mnemo` to the console
   process; the page is checked on 8090 before that.
 
