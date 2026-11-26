@@ -25,35 +25,35 @@ page is checked live after those two changes are applied. The graph Studio is no
 
 ## 3. The session and the spaces panel
 
-- [ ] 3.1 Checks first on the update: the session decoder fills the spaces, the selected space and
+- [x] 3.1 Checks first on the update: the session decoder fills the spaces, the selected space and
   the poll; a selection's success replaces the space and clears the run; a `403`/`404` keeps the
   list and sets the error; the left panel marks the selected space.
-- [ ] 3.2 Add the session fetch, the spaces panel, the `POST /api/session/space` command with the
+- [x] 3.2 Add the session fetch, the spaces panel, the `POST /api/session/space` command with the
   `X-CSRF-Token` header and the `{"space": "<name>"}` body, and the error state; make 3.1 pass.
 
 ## 4. The workflows, the runs and the token use
 
-- [ ] 4.1 Checks first on pure functions: the grouping by `workflow` with the newest run first and
+- [x] 4.1 Checks first on pure functions: the grouping by `workflow` with the newest run first and
   the groups by their newest run; the token formatting (`1.2k`, and the exact value); a run with no
   token is `0`; an empty list gives no group.
-- [ ] 4.2 Add the `/api/runs` fetch, the poll with `Time.every` at the session's interval, the
+- [x] 4.2 Add the `/api/runs` fetch, the poll with `Time.every` at the session's interval, the
   workflow/run view with status, times, counts and the two token totals, and the empty and stale
   states; make 4.1 pass.
 
 ## 5. The run graph
 
-- [ ] 5.1 Checks first on the pure layout: the layers and positions of a chain, a branch and a
+- [x] 5.1 Checks first on the pure layout: the layers and positions of a chain, a branch and a
   join, a single node and an implied edge; the status-to-token mapping (passed, failed, running,
   waiting, pending, skipped) and its text label.
-- [ ] 5.2 Add the selected run's `/api/runs/<run>/graph` fetch once per run, the `/api/runs/<run>`
+- [x] 5.2 Add the selected run's `/api/runs/<run>/graph` fetch once per run, the `/api/runs/<run>`
   poll, the SVG view with the nodes, the edges (implied dashed), the legend, and the node click
   that fetches `/api/step-runs/<step-run>` and shows its status, attempt and tokens; make 5.1 pass.
 
 ## 6. The states and the design system
 
-- [ ] 6.1 Checks first: the loading, empty, stale and session-expired views; a `401` and a failed
+- [x] 6.1 Checks first: the loading, empty, stale and session-expired views; a `401` and a failed
   read keep the last data; the keyboard reaches a space, a run and a node's step run.
-- [ ] 6.2 Make 6.1 pass with the tokens' stylesheet, the components, a visible focus and a text
+- [x] 6.2 Make 6.1 pass with the tokens' stylesheet, the components, a visible focus and a text
   label beside every status colour; the token lint stays green (no hex outside `Tokens.elm`).
 
 ## 7. The gates and the documentation
