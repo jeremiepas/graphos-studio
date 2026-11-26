@@ -20,8 +20,8 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 
 ## 3. Who holds the space, and the last heartbeat
 
-- [ ] 3.1 Checks first: the five scenarios of *The view says whether an orchestrator holds the space* (an old heartbeat of a live orchestrator keeps the live state) and the two of *The last heartbeat is shown*.
-- [ ] 3.2 Add the view to the Mnemo entry and the line of state to the header (decision 1), the read to the poll, and the age of the heartbeat as an age (decision 3); make 3.1 pass.
+- [x] 3.1 Checks first: the five scenarios of *The view says whether an orchestrator holds the space* (an old heartbeat of a live orchestrator keeps the live state) and the two of *The last heartbeat is shown*.
+- [x] 3.2 Add the view to the Mnemo entry and the line of state to the header (decision 1), the read to the poll, and the age of the heartbeat as an age (decision 3); make 3.1 pass.
 
 ## 4. The word and the reason of each run
 
