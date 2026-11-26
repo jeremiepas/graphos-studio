@@ -4,6 +4,8 @@ module Mnemo.Orchestrator exposing
     , labelWord
     , localName
     , report
+    , requests
+    , sentence
     , stateText
     , toneKey
     , wordExplanation
@@ -56,15 +58,22 @@ stateText state =
         NotServed ->
             "This console does not serve the orchestrator's state"
 
-        Stale _ ->
-            "The orchestrator's state is stale"
+        Stale stale ->
+            case stale.report of
+                Just last ->
+                    sentence last ++ " (stale)"
+
+                Nothing ->
+                    "The orchestrator's state is stale"
 
         Loaded loaded ->
-            statusText loaded.report
+            sentence loaded.report
 
 
-statusText : Orchestrator -> String
-statusText orchestrator =
+{-| The sentence of a report, whether it is fresh or the last one kept.
+-}
+sentence : Orchestrator -> String
+sentence orchestrator =
     if orchestrator.live then
         "An orchestrator holds the space"
 
@@ -182,6 +191,14 @@ wordFor runs key =
     in
     List.filter (\run -> run.run == key || run.run == name) runs
         |> List.head
+
+
+{-| Every request the view can cause, listed so a test can find nothing but a
+read. The page's only write, the space selection, is not the view's.
+-}
+requests : List String
+requests =
+    [ "GET /api/orchestrator" ]
 
 
 {-| The age of the last heartbeat, as an age and only as an age.

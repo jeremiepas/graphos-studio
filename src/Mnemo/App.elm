@@ -627,7 +627,7 @@ viewOrchestratorBody model =
 viewOrchestratorReport : Model -> Maybe Time.Posix -> Orchestrator -> List (Html Msg)
 viewOrchestratorReport model staleReadAt orchestrator =
     div [ A.class "mnemo-orchestrator-state" ]
-        [ text (Orchestrator.stateText model.orchestrator) ]
+        [ text (Orchestrator.sentence orchestrator) ]
         :: (staleLine staleReadAt
                 ++ viewHeartbeat model orchestrator
                 ++ [ div [ A.class "mnemo-run-meta" ]

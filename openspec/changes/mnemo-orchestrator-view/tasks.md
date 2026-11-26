@@ -35,8 +35,8 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 
 ## 6. Not served, stale, session expired
 
-- [ ] 6.1 Checks first: the three scenarios of *The view reads and never controls*, with the three states of decision 6 as three values of the model, and a test that lists every request the view's update can produce and finds only `GET`.
-- [ ] 6.2 Add the states and their texts; make 6.1 pass.
+- [x] 6.1 Checks first: the three scenarios of *The view reads and never controls*, with the three states of decision 6 as three values of the model, and a test that lists every request the view's update can produce and finds only `GET`.
+- [x] 6.2 Add the states and their texts; make 6.1 pass.
 
 ## 7. Design system, keyboard and documentation
 

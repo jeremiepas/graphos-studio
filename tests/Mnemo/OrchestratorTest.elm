@@ -8,6 +8,7 @@ reaches a console or an orchestrator.
 
 import Expect
 import Json.Decode as D
+import Mnemo.Api as Api
 import Mnemo.App as App
 import Mnemo.Decode as Decode exposing (Orchestrator, Run, Session)
 import Mnemo.Fixtures as Fixtures
@@ -410,6 +411,93 @@ suite =
                         |> Query.findAll [ Selector.class "mnemo-run" ]
                         |> Query.index 2
                         |> Query.hasNot [ Selector.text "Moves" ]
+            ]
+        , describe "the read: served, not served, stale, expired" <|
+            [ test "the view's complete request list holds only GET" <|
+                \_ ->
+                    Expect.all
+                        [ \_ -> Expect.equal 1 (List.length Orchestrator.requests)
+                        , \_ ->
+                            Expect.equal True
+                                (List.all (String.startsWith "GET ") Orchestrator.requests)
+                        ]
+                        ()
+            , test "a console without the route says so, and does not say that none holds the space" <|
+                \_ ->
+                    let
+                        updated =
+                            App.update (App.GotOrchestrator (Err Api.NotFound)) (model live)
+                                |> Tuple.first
+
+                        html =
+                            App.view updated |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal Orchestrator.NotServed updated.orchestrator
+                        , \_ -> html |> Query.has [ Selector.text "This console does not serve the orchestrator's state" ]
+                        , \_ -> html |> Query.hasNot [ Selector.text "No orchestrator holds the space" ]
+                        ]
+                        ()
+            , test "a failed poll keeps the last state, marks it stale, names the route and offers a retry" <|
+                \_ ->
+                    let
+                        updated =
+                            App.update (App.GotOrchestrator (Err (Api.BadStatus 503))) (model live)
+                                |> Tuple.first
+
+                        html =
+                            App.view updated |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.text "An orchestrator holds the space" ]
+                        , \_ -> html |> Query.has [ Selector.text "Stale: last read 2026-11-26T22:25:08Z." ]
+                        , \_ -> html |> Query.has [ Selector.text "HTTP 503 from /api/orchestrator." ]
+                        , \_ -> html |> Query.has [ Selector.tag "button", Selector.text "Retry" ]
+                        ]
+                        ()
+            , test "a 401 shows the page's session-expired message" <|
+                \_ ->
+                    let
+                        updated =
+                            App.update (App.GotOrchestrator (Err Api.Unauthorized)) (model live)
+                                |> Tuple.first
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal True updated.sessionExpired
+                        , \_ -> App.view updated |> Query.fromHtml |> Query.has [ Selector.text "The session expired" ]
+                        ]
+                        ()
+            , test "each state of the view has its own text" <|
+                \_ ->
+                    Expect.equal 6
+                        (List.length
+                            (List.foldl
+                                (\text seen ->
+                                    if List.member text seen then
+                                        seen
+
+                                    else
+                                        text :: seen
+                                )
+                                []
+                                [ Orchestrator.stateText Orchestrator.Loading
+                                , Orchestrator.stateText Orchestrator.NotServed
+                                , Orchestrator.stateText (Orchestrator.Stale { report = Nothing, readAt = now, notice = "x" })
+                                , Orchestrator.stateText (Orchestrator.Loaded { report = live, readAt = now })
+                                , Orchestrator.stateText (Orchestrator.Loaded { report = gone, readAt = now })
+                                , Orchestrator.stateText (Orchestrator.Loaded { report = never, readAt = now })
+                                ]
+                            )
+                        )
+            , test "the view loads before the first answer" <|
+                \_ ->
+                    let
+                        base =
+                            model live
+                    in
+                    App.view { base | orchestrator = Orchestrator.Loading }
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "Loading the orchestrator's state…" ]
             ]
         , describe "the clock" <|
             [ test "an ISO time gives milliseconds and survives a round trip" <|
