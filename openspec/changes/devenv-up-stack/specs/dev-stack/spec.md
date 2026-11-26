@@ -9,20 +9,23 @@ artifacts, with explicit configuration paths that default under the user's home.
 ### Requirement: One-command startup and shutdown
 
 `devenv up` SHALL start three supervised services — the studio frontend, the
-Graphos query API and the mnemo web console — and `devenv down` SHALL stop them.
+Graphos query API and the mnemo web console — in the foreground, and Ctrl-C (or
+`devenv processes down` after a background `devenv processes start`) SHALL stop
+them.
 Each service SHALL be reachable at its documented address: the studio at
 `http://127.0.0.1:8090/`, the Graphos API at
-`http://127.0.0.1:8080/api/overview` and the mnemo console at
+`http://127.0.0.1:8080/api/query?q=probe&budget=1` (with the served graph at
+`http://127.0.0.1:8080/graph.json`) and the mnemo console at
 `http://127.0.0.1:7482/`.
 
 #### Scenario: Fresh checkout starts connected
 
 - **WHEN** the pinned artifacts are in the local cache and a developer runs `devenv up`
-- **THEN** the studio is served on port 8090, `GET http://127.0.0.1:8080/api/overview` succeeds, and the mnemo console accepts connections on port 7482
+- **THEN** the studio is served on port 8090, `GET http://127.0.0.1:8080/api/query?q=probe&budget=1` and `GET http://127.0.0.1:8080/graph.json` succeed, and the mnemo console accepts connections on port 7482
 
 #### Scenario: Shutdown stops every service
 
-- **WHEN** a developer runs `devenv down` after a `devenv up`
+- **WHEN** a developer runs `devenv up` and stops it with Ctrl-C, or runs `devenv processes down` after `devenv processes start`
 - **THEN** ports 8090, 8080 and 7482 stop accepting connections
 
 ### Requirement: Pinned and verified service artifacts
@@ -56,10 +59,11 @@ The stack SHALL resolve `GRAPHOS_CONFIG` to `$HOME/.config/graphos/graphos.yaml`
 and `MNEMO_CONFIG` to `$HOME/.config/mnemo/graphos-studio.yaml` by default, SHALL
 export both in the dev shell, and SHALL pass the mnemo path explicitly to `mnemo
 up` and `mnemo web`. Because `graphos serve` accepts flags rather than a
-configuration file, the stack SHALL pass `--graph`, `--port`, `--host` and
-`--api-only` explicitly and SHALL document that `GRAPHOS_CONFIG` governs graph
-building. An environment override SHALL change the path used without editing the
-repository.
+configuration file, the stack SHALL pass `--graph`, `--dir`, `--port` and
+`--host` explicitly, SHALL serve static files so the studio can fetch
+`/graph.json` (the pinned server has no slice API), and SHALL document that
+`GRAPHOS_CONFIG` governs graph building. An environment override SHALL change
+the path used without editing the repository.
 
 #### Scenario: Defaults point under the user's home
 
@@ -75,13 +79,17 @@ repository.
 
 The stack SHALL serve the graph named by `GRAPHOS_GRAPH`, defaulting to
 `graphos-out/graph.json` when that file exists and to `tests/fixtures/graph.json`
-otherwise. When neither path exists, the Graphos process SHALL exit non-zero with
-a message naming `GRAPHOS_GRAPH` instead of serving an empty API.
+otherwise. The selected graph SHALL be published as `/graph.json` from the
+served directory. The contract fixture's `community_aggregates` SHALL be removed
+from the published copy because the pinned server cannot decode their numeric
+ids; the studio synthesizes aggregates from node community ids. When neither
+path exists, the Graphos process SHALL exit non-zero with a message naming
+`GRAPHOS_GRAPH` instead of serving an empty API.
 
 #### Scenario: Fixture serves a clean checkout
 
 - **WHEN** `graphos-out/graph.json` is absent and the checkout contains `tests/fixtures/graph.json`
-- **THEN** the Graphos service serves the fixture and `GET /api/overview` returns a graph
+- **THEN** the Graphos service publishes the fixture as `/graph.json` (without `community_aggregates`) and `GET /graph.json` returns a graph the studio decodes
 
 #### Scenario: Missing graph fails clearly
 

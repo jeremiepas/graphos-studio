@@ -33,12 +33,17 @@ stack in step with the releases.
   and defaulting under the user's home: `GRAPHOS_CONFIG`
   (`~/.config/graphos/graphos.yaml`) and `MNEMO_CONFIG`
   (`~/.config/mnemo/graphos-studio.yaml`). `graphos serve` takes flags rather
-  than a config file, so the stack passes `--graph`, `--port`, `--host` and
-  `--api-only` explicitly and documents that `GRAPHOS_CONFIG` governs graph
-  building, not serving.
+  than a config file, so the stack passes `--graph`, `--dir`, `--port` and
+  `--host` explicitly and documents that `GRAPHOS_CONFIG` governs graph
+  building, not serving. Static files are served because the pinned v0.3.0
+  server has no `/api/overview` slice API: the studio probes `/api/query` and
+  fetches `/graph.json`, so it connects in its legacy mode.
 - Choose the served graph from `GRAPHOS_GRAPH`, defaulting to
   `graphos-out/graph.json` when it exists and `tests/fixtures/graph.json`
-  otherwise, so a clean checkout still starts connected.
+  otherwise, so a clean checkout still starts connected. The contract fixture
+  is published under the pinned server's legacy shape (its numeric
+  `community_aggregates` ids are decoded as text by v0.3.0 and rejected; the
+  studio synthesizes aggregates from node community ids).
 - Add a `devenv tasks run dev-stack:check` preflight and a README "Dev stack"
   section that replaces the manual three-terminal recipe.
 - Out of scope (stated so the proposal is not read as wider): publishing a

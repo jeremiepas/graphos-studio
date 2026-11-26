@@ -8,10 +8,15 @@ See `proposal.md` — Why. The constraints that shape the approach:
 - The studio is static: `elm make src/Main.elm --optimize --output=public/studio.js`,
   then any static server over `public/`. `src/Main.elm` defaults its Graphos
   origin to `http://localhost:8080`.
-- `graphos serve` takes flags, not a configuration file: `--graph`, `--port`,
-  `--host`, `--api-only`. It loads the graph at startup and exits 1 when the
-  file is missing. It answers with `Access-Control-Allow-Origin: *`, so a studio
-  served from another origin can call it.
+- `graphos serve` takes flags, not a configuration file: `--graph`, `--dir`,
+  `--port`, `--host`, `--api-only`. It loads the graph at startup and exits 1
+  when the file is missing. It answers with `Access-Control-Allow-Origin: *`, so
+  a studio served from another origin can call it. The pinned v0.3.0 release
+  ships `/api/query`, `/api/explain`, `/api/path`, `/api/symbols`,
+  `/api/neighbors`, `/api/cypher/mutate` and static files, but no
+  `/api/overview` slice API; the studio's probe therefore falls back to
+  `LegacyMode`, which fetches `/graph.json` and uses `/api/query`. Serving
+  static files (no `--api-only`) is what makes a fresh clone connect.
 - Graphos publishes `v0.3.0` with `graphos-linux-x86_64` and a `.sha256`
   (`c3894f8614c3458431ccb04d2ada29ec54aa130be4603156e89b637e81000892`).
 - mnemo publishes no release. The `graphos-studio` space is configured at
@@ -30,7 +35,8 @@ See `proposal.md` — Why. The constraints that shape the approach:
 **Goals:**
 
 - One `devenv up` reaches a connected studio and a live mnemo console, with
-  supervised logs and a clean `devenv down`.
+  supervised logs and a clean stop (`Ctrl-C`, or `devenv processes start` then
+  `devenv processes down` for a background run).
 - The versions of Graphos and mnemo are visible in one checked-in file and are
   verified before use.
 - Configuration paths are explicit, default under the user's home, and
@@ -51,7 +57,9 @@ See `proposal.md` — Why. The constraints that shape the approach:
 ### 1. `devenv` processes, not a Makefile or Compose file
 
 `devenv.nix` gains a `processes` block with `studio`, `graphos` and `mnemo`.
-`devenv up` supervises them and prefixes their logs; `devenv down` stops them.
+`devenv up` supervises them in the foreground and prefixes their logs; Ctrl-C
+stops it. `devenv processes start` plus `devenv processes down` is the
+background pair.
 
 Alternatives rejected: a `docker-compose.yml` would duplicate the toolchain and
 bind-mount Elm/GHC; a `scripts/dev.sh` would have no supervision, restart
@@ -128,7 +136,7 @@ Both service wrappers and `enterShell` use shell defaults:
 so an exported value wins, `enterShell` shows the resolved paths, and the
 process wrappers still work if a process is launched without an interactive
 shell. `mnemo up` and `mnemo web` receive `--config "$MNEMO_CONFIG"` explicitly.
-`graphos serve` receives `--graph/--port/--host/--api-only`; the README states
+`graphos serve` receives `--graph/--dir/--port/--host`; the README states
 that `GRAPHOS_CONFIG` is the graph builder's configuration, since `serve` does
 not read it.
 
@@ -144,6 +152,16 @@ another repository, out of scope).
 the Graphos wrapper exits with a message naming the variable and both
 candidates. `graphos serve` itself already exits 1 on a missing file, so the
 wrapper adds the actionable message and the selection rule.
+
+The selected graph is published at `.devenv/dev-stack/graphos-serve/graph.json`
+and passed to `serve` together with `--dir` on that directory, so the studio can
+fetch it. The checked-in contract fixture is copied without its
+`community_aggregates`: v0.3.0 decodes aggregate ids as `Text` and requires the
+eleven analysis fields, while the fixture carries numeric ids and the seven
+contract fields, so the server rejects it. Dropping that section is lossless for
+the studio, which synthesizes aggregates from node `community_id`s and
+`community_labels`; a real `graphos-out` graph has string ids and is symlinked
+unchanged.
 
 Alternatives rejected: always the fixture (ignores the developer's real graph);
 require `GRAPHOS_GRAPH` (a fresh clone would not start); build a graph on
@@ -236,9 +254,10 @@ a non-goal.
   `devenv up` starts.
 - **`mnemo web` prints a tokenised URL.** → the README says to use the URL the
   console prints; the plain 7482 root is not the authenticated entry point.
-- **process-compose does not restart a failed service.** → a failed process
-  stays failed with its log in view; `devenv up` again retries. This is preferred
-  over a restart loop hiding a compile error.
+- **A failed service must not spin.** → each process sets
+  `process-compose.restart = "no"`, so a failed process stays failed with its
+  log in view; `devenv up` again retries. This is preferred over a restart loop
+  hiding a compile error or an occupied port.
 
 ## Migration Plan
 

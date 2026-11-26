@@ -22,15 +22,80 @@ Frontend of Graphos, split out of the Haskell monorepo (openspec change
 The only boundary with the Haskell repo is the `graph-json-contract` shape and
 the `graphos serve` slice/query API; both are consumed unchanged.
 
-## Build & run
+## Dev stack
+
+`devenv up` starts the studio, the Graphos query API and the mnemo console from
+the artifacts pinned in `dev-stack/pins.json`:
+
+```bash
+direnv allow                       # or: devenv shell
+devenv tasks run dev-stack:check   # preflight: pins, cache, config, graph, ports
+devenv up                          # Ctrl-C stops it
+```
+
+| Service | Address |
+|---|---|
+| Studio | <http://127.0.0.1:8090/> |
+| Graphos | <http://127.0.0.1:8080/graph.json> · query API `/api/query` |
+| mnemo console | <http://127.0.0.1:7482/> (open the tokenised URL the log prints) |
+
+The Graphos v0.3.0 release serves `/graph.json` and `/api/query`; it has no
+`/api/overview` slice API, so the studio connects in its legacy mode. The
+studio's default origin is `http://localhost:8080`; on a host where the browser
+does not fall back from `::1`, use `http://127.0.0.1:8080`. For a background
+run use `devenv processes start`, and `devenv processes down` to stop it.
+
+### Pins and cache
+
+`dev-stack/pins.json` is the single record of what runs:
+
+- **graphos**: GitHub release `v0.3.0`, asset `graphos-linux-x86_64`, verified
+  against the published `.sha256`.
+- **mnemo**: source pin `jeremiepas/poc-graphos` at
+  `d5d7b6e3cb66e46b8cc52d854cdd00e083b36cbe`, built once from `mnemo/` with the
+  shell's GHC, then verified against a recorded sidecar hash.
+
+Bump a pin by editing `dev-stack/pins.json` and running
+`devenv tasks run dev-stack:fetch`. An already verified artifact is reused and
+never downloaded or rebuilt again. The cache lives in `.devenv/dev-stack/`
+(gitignored, removed by `devenv clean`) and is laid out per version, so a pin
+change coexists with the previous artifact. A SHA-256 mismatch removes the
+artifact and fails closed: the service does not start.
+
+### Configuration
+
+| Variable | Default | Used by |
+|---|---|---|
+| `GRAPHOS_CONFIG` | `$HOME/.config/graphos/graphos.yaml` | graph building only |
+| `MNEMO_CONFIG` | `$HOME/.config/mnemo/graphos-studio.yaml` | `mnemo up`, `mnemo web` |
+
+Both are exported in the dev shell and resolved again by the service wrappers,
+so an exported value wins and the repository does not need editing.
+`graphos serve` takes flags, not a configuration file: the stack passes
+`--graph`, `--dir`, `--port` and `--host` and documents that `GRAPHOS_CONFIG`
+is the graph builder's configuration. The mnemo path is passed explicitly to
+`mnemo up` and `mnemo web`, and must exist.
+
+### Graph
+
+`GRAPHOS_GRAPH` wins; otherwise `graphos-out/graph.json` when it exists; then
+`tests/fixtures/graph.json`, so a clean checkout still starts connected. The
+selected graph is published as `/graph.json`. The checked-in contract fixture
+uses numeric `community_aggregates` ids and only the contract fields, which the
+pinned server cannot decode, so that section is dropped from the published copy;
+the studio synthesizes aggregates from node community ids. When no graph
+exists, the Graphos process exits with a message naming `GRAPHOS_GRAPH` and both
+candidate paths.
+
+### Without the stack
+
+The individual commands remain available:
 
 ```bash
 # devenv provides elm 0.19.2, elm-test, elm-format, elm-review:
-direnv allow            # or: devenv shell
 elm make src/Main.elm --optimize --output=public/studio.js
 elm-test
-# then serve the static bundle any way you like:
-python3 -m http.server -d public 8090     # → http://localhost:8090
+python3 -m http.server --bind 127.0.0.1 -d public 8090   # → http://127.0.0.1:8090
 ```
 
 `devenv` tasks mirror CI: `devenv tasks run studio:ci` (build + tests +
