@@ -98,9 +98,35 @@ elm-test
 python3 -m http.server --bind 127.0.0.1 -d public 8090   # → http://127.0.0.1:8090
 ```
 
-`devenv` tasks mirror CI: `devenv tasks run studio:ci` (build + tests +
-`elm-review` + fixture drift + token lint). The Haskell package tests with
-`devenv tasks run openspec-view:test` (or `cd openspec-view && cabal test`).
+`devenv` tasks mirror CI: `devenv tasks run studio:ci` (both Elm entries,
+tests, `elm-review`, fixture drift, the Mnemo entry check and token lint). The
+Haskell package tests with `devenv tasks run openspec-view:test` (or
+`cd openspec-view && cabal test`).
+
+## Mnemo page
+
+`src/Mnemo/Main.elm` is a second Elm entry, the read-only Mnemo page
+(`mnemo-workbench`): a left panel of the console's spaces, each workflow's runs
+with status and token use, and the graph of a selected run. It builds to
+`public/mnemo/mnemo.js`; `public/mnemo/index.html` starts `Elm.Mnemo.Main` on `#app`
+through `boot.js`, so the console's `script-src 'self'` policy holds.
+
+When the console serves a frontend bundle (`mnemo web --frontend-dir
+public/mnemo`, from `mnemo-console-in-studio`), `/studio/` is this page. Until
+those API changes are applied to the pinned console, open it on the Studio's
+own server:
+
+```bash
+devenv tasks run mnemo:build
+python3 -m http.server --bind 127.0.0.1 -d public 8090   # → http://127.0.0.1:8090/mnemo/
+```
+
+The page reads `/api/session` (the spaces, the selected space, the poll
+interval and the CSRF token), `/api/runs`, `/api/runs/<run>`,
+`/api/runs/<run>/graph` and `/api/step-runs/<step-run>`. Its only write is
+`POST /api/session/space` with `X-CSRF-Token`; the selection lives in the
+console session, not in the browser. A failed read keeps the last data and
+offers a retry; a `401` says the session expired.
 
 ## Layout
 
@@ -114,9 +140,11 @@ python3 -m http.server --bind 127.0.0.1 -d public 8090   # → http://127.0.0.1:
 | `src/Studio/Scope.elm` | extraction scope algebra + canonical view encoder |
 | `src/Studio/Api.elm` | graphos serve client: probe, fetch, `/api/cypher/mutate`, group counts |
 | `src/Studio/DesignSystem/` | Tokens (single styling source — CI lints hex literals elsewhere) + Components |
+| `src/Mnemo/` | the Mnemo page: entry, decoders, grouping, layout and SVG graph |
 | `public/` | `index.html`, `ports.js` (renderer handle + localStorage only), vendored vis-network |
+| `public/mnemo/` | the Mnemo page's `index.html`, `boot.js` and built `mnemo.js` |
 | `assets/viewer/` | static HTML viewer assets (`viewer.css`, `viewer.js`, vendored vis-network) served by `graphos serve` |
-| `tests/` | 104 elm-tests: navigation invariants, codecs, editing, groups, scope |
+| `tests/` | 140 elm-tests: navigation invariants, codecs, editing, groups, scope, the Mnemo page |
 | `review/` | `elm-review` configuration (`NoUnused.Variables`, `Simplify`), run by CI |
 | `.scripts/fixture-drift-check.sh` | fails when `tests/fixtures/graph.json` and `Fixtures.fixtureJson` diverge |
 | `openspec-view/` | base-only Haskell package behind `graphos view` (change list, artifacts, spec diff, dashboard) |

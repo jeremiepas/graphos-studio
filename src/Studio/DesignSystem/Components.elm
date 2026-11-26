@@ -6,6 +6,7 @@ module Studio.DesignSystem.Components exposing
     , dialog
     , emptyState
     , field
+    , navItem
     , panel
     , selectInput
     , slider
@@ -123,11 +124,43 @@ badge variant content =
                 "danger" ->
                     "badge badge-danger"
 
+                "success" ->
+                    "badge badge-success"
+
+                "warning" ->
+                    "badge badge-warning"
+
+                "muted" ->
+                    "badge badge-muted"
+
                 _ ->
                     "badge"
             )
         ]
         [ text content ]
+
+
+{-| A navigation item (a space, a run): a real button, so keyboard focus and
+activation come for free, and the selected one is marked for sighted and
+assistive users alike.
+-}
+navItem : { label : String, selected : Bool, onPress : msg } -> Html msg
+navItem cfg =
+    button
+        [ A.class
+            ("list-item nav-item"
+                ++ (if cfg.selected then
+                        " nav-item-selected"
+
+                    else
+                        ""
+                   )
+            )
+        , A.type_ "button"
+        , A.attribute "aria-current" (if cfg.selected then "true" else "false")
+        , Ev.onClick cfg.onPress
+        ]
+        [ text cfg.label ]
 
 
 emptyState : String -> Html msg

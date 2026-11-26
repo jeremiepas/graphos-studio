@@ -58,4 +58,35 @@ if fixture == constant:
 else:
     print("DRIFT: graph.json != Fixtures.fixtureJson", file=sys.stderr)
     sys.exit(1)
+
+# `mnemo-workbench`: the five console API fixtures are copied into
+# tests/Mnemo/fixtures/ and embedded in tests/Mnemo/Fixtures.elm, because
+# elm-test cannot read files.
+MNEMO_FIXTURES = "tests/Mnemo/Fixtures.elm"
+mnemo = [
+    ("session", "sessionJson"),
+    ("runs", "runsJson"),
+    ("run", "runJson"),
+    ("graph", "graphJson"),
+    ("step-run", "stepRunJson"),
+]
+
+mnemo_text = open(MNEMO_FIXTURES).read()
+for name, constant_name in mnemo:
+    path = "tests/Mnemo/fixtures/" + name + ".json"
+    on_disk = canonicalize(json.load(open(path)))
+    match = re.search(
+        r"\n" + constant_name + r" : String\n" + constant_name + r" =\n\s*\"\"\"(.*?)\"\"\"",
+        mnemo_text,
+        re.S,
+    )
+    if not match:
+        print(constant_name + " constant not found in " + MNEMO_FIXTURES, file=sys.stderr)
+        sys.exit(2)
+    embedded = canonicalize(json.loads(match.group(1)))
+    if on_disk == embedded:
+        print("OK: " + path + " matches " + constant_name)
+    else:
+        print("DRIFT: " + path + " != " + constant_name, file=sys.stderr)
+        sys.exit(1)
 PY

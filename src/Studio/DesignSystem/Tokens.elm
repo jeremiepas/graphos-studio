@@ -407,4 +407,52 @@ stylesheet theme =
         , rule ".list-item"
             ("padding:" ++ px t.s1 ++ " " ++ px t.s2 ++ ";border-radius:" ++ px t.radiusSm ++ ";cursor:pointer;font-size:" ++ px t.fontSm)
         , rule ".list-item:hover" ("background:" ++ t.surfaceAlt)
+
+        -- navigation (a space or a run is a real button)
+        , rule ".nav-item" ("display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:" ++ t.text)
+        , rule ".nav-item-selected" ("background:" ++ t.surfaceAlt ++ ";border-color:" ++ t.accent ++ ";border-left:3px solid " ++ t.accent ++ ";font-weight:600")
+        , rule ".nav-item:focus-visible" ("outline:2px solid " ++ t.focus ++ ";outline-offset:1px")
+        , rule ".badge-success" ("background:" ++ t.success ++ ";color:" ++ t.accentText ++ ";border-color:" ++ t.success)
+        , rule ".badge-warning" ("background:" ++ t.warning ++ ";color:" ++ t.accentText ++ ";border-color:" ++ t.warning)
+        , rule ".badge-muted" ("background:" ++ t.surfaceAlt ++ ";color:" ++ t.textMuted ++ ";border-color:" ++ t.border)
+
+        -- the Mnemo page
+        , rule ".mnemo-shell" "display:flex;flex-direction:column;height:100%"
+        , rule ".mnemo-header"
+            ("display:flex;align-items:center;gap:" ++ px t.s3 ++ ";padding:" ++ px t.s2 ++ " " ++ px t.s4 ++ ";background:" ++ t.surface ++ ";border-bottom:1px solid " ++ t.border ++ ";flex-wrap:wrap")
+        , rule ".mnemo-title" ("font-size:" ++ px t.fontLg ++ ";font-weight:600;margin-right:" ++ px t.s2)
+        , rule ".mnemo-main" "display:flex;flex:1;min-height:0"
+        , rule ".mnemo-spaces"
+            ("width:240px;min-width:240px;overflow-y:auto;background:" ++ t.surface ++ ";border-right:1px solid " ++ t.border ++ ";padding:" ++ px t.s3)
+        , rule ".mnemo-runs"
+            ("width:420px;min-width:360px;overflow-y:auto;background:" ++ t.bg ++ ";border-right:1px solid " ++ t.border ++ ";padding:" ++ px t.s3)
+        , rule ".mnemo-detail" ("flex:1;min-width:0;overflow:auto;background:" ++ t.canvasBg ++ ";padding:" ++ px t.s4)
+        , rule ".mnemo-group" ("margin-bottom:" ++ px t.s4)
+        , rule ".mnemo-group-title"
+            ("font-size:" ++ px t.fontSm ++ ";font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:" ++ t.textMuted ++ ";margin-bottom:" ++ px t.s2)
+        , rule ".mnemo-run"
+            ("display:block;width:100%;text-align:left;cursor:pointer;background:" ++ t.surface ++ ";color:" ++ t.text ++ ";border:1px solid " ++ t.border ++ ";border-radius:" ++ px t.radiusMd ++ ";padding:" ++ px t.s2 ++ " " ++ px t.s3 ++ ";margin-bottom:" ++ px t.s2 ++ ";font-size:" ++ px t.fontSm)
+        , rule ".mnemo-run:hover" ("border-color:" ++ t.accent)
+        , rule ".mnemo-run:focus-visible" ("outline:2px solid " ++ t.focus ++ ";outline-offset:1px")
+        , rule ".mnemo-run-selected" ("background:" ++ t.surfaceAlt ++ ";border-color:" ++ t.accent ++ ";border-left:3px solid " ++ t.accent)
+        , rule ".mnemo-run-head" "display:flex;align-items:center;justify-content:space-between;gap:8px"
+        , rule ".mnemo-run-title" ("font-weight:600;font-size:" ++ px t.fontSm ++ ";overflow:hidden;text-overflow:ellipsis;white-space:nowrap")
+        , rule ".mnemo-run-meta" ("color:" ++ t.textMuted ++ ";font-size:" ++ px t.fontXs ++ ";margin-top:" ++ px t.s1)
+        , rule ".mnemo-run-tokens" ("display:flex;gap:" ++ px t.s3 ++ ";font-size:" ++ px t.fontXs ++ ";margin-top:" ++ px t.s1)
+        , rule ".mnemo-notice"
+            ("display:flex;align-items:center;gap:" ++ px t.s2 ++ ";padding:" ++ px t.s2 ++ " " ++ px t.s3 ++ ";margin-bottom:" ++ px t.s3 ++ ";background:" ++ t.surfaceAlt ++ ";border:1px solid " ++ t.border ++ ";border-left:3px solid " ++ t.warning ++ ";border-radius:" ++ px t.radiusSm ++ ";font-size:" ++ px t.fontSm)
+        , rule ".mnemo-notice-error" ("border-left-color:" ++ t.danger)
+        , rule ".mnemo-legend"
+            ("display:flex;flex-wrap:wrap;align-items:center;gap:" ++ px t.s3 ++ ";margin-top:" ++ px t.s3 ++ ";font-size:" ++ px t.fontXs ++ ";color:" ++ t.textMuted)
+        , rule ".mnemo-legend-item" ("display:inline-flex;align-items:center;gap:" ++ px t.s1)
+        , rule ".mnemo-swatch"
+            ("width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid " ++ t.border)
+        , rule ".mnemo-swatch-implied"
+            ("width:18px;height:0;border:0;border-top:2px dashed " ++ t.canvasEdge ++ ";border-radius:0")
+        , rule ".mnemo-graph-scroll" "overflow:auto;max-height:70vh"
+        , rule ".mnemo-graph" "display:block"
+        , rule ".mnemo-node" "cursor:default"
+        , rule ".mnemo-node-clickable" "cursor:pointer"
+        , rule ".mnemo-node:focus-visible" ("outline:2px solid " ++ t.focus ++ ";outline-offset:2px")
+        , rule ".mnemo-detail-title" ("font-size:" ++ px t.fontLg ++ ";font-weight:600;margin-bottom:" ++ px t.s2)
         ]

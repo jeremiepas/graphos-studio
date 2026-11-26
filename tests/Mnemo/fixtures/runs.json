@@ -1,0 +1,38 @@
+{
+  "runs": [
+    {
+      "key": "run|console|r1",
+      "workflow": "dev-plan",
+      "status": "running",
+      "started": "2026-11-26T09:00:00Z",
+      "ended": null,
+      "stopped_by": null,
+      "step_runs": 3,
+      "waiting": 1,
+      "tokens": { "card": 1200, "prompt": 3400 }
+    },
+    {
+      "key": "run|console|r2",
+      "workflow": "dev-plan",
+      "status": "passed",
+      "started": "2026-11-26T08:00:00Z",
+      "ended": "2026-11-26T08:24:00Z",
+      "stopped_by": null,
+      "step_runs": 4,
+      "waiting": 0,
+      "tokens": { "card": 800, "prompt": 2100 }
+    },
+    {
+      "key": "run|console|r3",
+      "workflow": "release",
+      "status": "waiting",
+      "started": "2026-11-26T07:30:00Z",
+      "ended": null,
+      "stopped_by": null,
+      "step_runs": 1,
+      "waiting": 1,
+      "tokens": { "card": 0, "prompt": 0 }
+    }
+  ],
+  "digest": "3b7d0c11"
+}

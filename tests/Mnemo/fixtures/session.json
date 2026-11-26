@@ -1,0 +1,7 @@
+{
+  "space": "console",
+  "spaces": ["console", "graphos-studio"],
+  "csrf": "csrf-token-of-the-session",
+  "poll": 2,
+  "digest": "9f2c1a7e"
+}

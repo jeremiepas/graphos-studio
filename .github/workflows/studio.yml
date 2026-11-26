@@ -69,6 +69,15 @@ jobs:
       - name: Build (elm make --optimize)
         run: nix shell github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm -c elm make src/Main.elm --optimize --output=public/studio.js
 
+      # The Mnemo page is a second entry (`mnemo-workbench`); the console's
+      # `--frontend-dir public/mnemo` serves it. A second bundle that CI does
+      # not build would rot.
+      - name: Build Mnemo entry (elm make --optimize)
+        run: nix shell github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm -c elm make src/Mnemo/Main.elm --optimize --output=public/mnemo/mnemo.js
+
+      - name: Check Mnemo entry
+        run: .scripts/mnemo-entry-check.sh
+
       - name: Test (elm-test)
         run: nix shell github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm github:NixOS/nixpkgs/319e4cebef10cbb636c6ea392137b52ad105336a#elmPackages.elm-test -c elm-test
 
