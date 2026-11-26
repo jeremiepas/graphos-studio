@@ -30,8 +30,8 @@ refer to `design.md`; requirement and scenario names are those of the spec. Each
 
 ## 5. The word in the run list
 
-- [ ] 5.1 Checks first: the three scenarios of *The run list carries the word of each run*, with the word matched to a run by its key and no word for a run the answer does not hold.
-- [ ] 5.2 Show the word in the run rows from the same read (decision 5); make 5.1 pass, and check that every test of the run list of `mnemo-workbench` still passes unchanged.
+- [x] 5.1 Checks first: the three scenarios of *The run list carries the word of each run*, with the word matched to a run by its key and no word for a run the answer does not hold.
+- [x] 5.2 Show the word in the run rows from the same read (decision 5); make 5.1 pass, and check that every test of the run list of `mnemo-workbench` still passes unchanged.
 
 ## 6. Not served, stale, session expired
 

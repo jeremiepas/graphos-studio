@@ -566,8 +566,21 @@ viewRuns model =
                     ]
 
                 else
-                    List.map (viewGroup model.selectedRun) (Grouping.groupRuns model.runs)
+                    List.map (viewGroup model.selectedRun (runListWords model)) (Grouping.groupRuns model.runs)
                )
+
+
+{-| The run list shows a word only from a served, decoded answer: a console
+without the route, and a failed read, leave every row as it was.
+-}
+runListWords : Model -> List Decode.OrchestratorRun
+runListWords model =
+    case model.orchestrator of
+        Orchestrator.Loaded loaded ->
+            loaded.report.runs
+
+        _ ->
+            []
 
 
 
@@ -774,16 +787,16 @@ countsText orchestrator =
         "The heartbeat: " ++ String.join ", " parts ++ "."
 
 
-viewGroup : Maybe String -> Grouping.WorkflowGroup -> Html Msg
-viewGroup selectedRun group =
+viewGroup : Maybe String -> List Decode.OrchestratorRun -> Grouping.WorkflowGroup -> Html Msg
+viewGroup selectedRun words group =
     div [ A.class "mnemo-group" ]
         [ div [ A.class "mnemo-group-title" ] [ text group.workflow ]
-        , div [] (List.map (viewRun selectedRun) group.runs)
+        , div [] (List.map (\run -> viewRun selectedRun (Orchestrator.wordFor words run.key) run) group.runs)
         ]
 
 
-viewRun : Maybe String -> Run -> Html Msg
-viewRun selectedRun run =
+viewRun : Maybe String -> Maybe Decode.OrchestratorRun -> Run -> Html Msg
+viewRun selectedRun word run =
     button
         [ A.class
             ("mnemo-run"
@@ -800,7 +813,22 @@ viewRun selectedRun run =
         ]
         [ div [ A.class "mnemo-run-head" ]
             [ span [ A.class "mnemo-run-title", A.title run.key ] [ text run.key ]
-            , statusBadge run.status
+            , span [ A.class "mnemo-orchestrator-badges" ]
+                (statusBadge run.status
+                    :: (case word of
+                            Nothing ->
+                                []
+
+                            Just given ->
+                                if isFinalStatus run.status then
+                                    []
+
+                                else
+                                    [ span [ A.title given.reason ]
+                                        [ UI.badge (Orchestrator.toneKey given.word) (Orchestrator.labelWord given.word) ]
+                                    ]
+                       )
+                )
             ]
         , div [ A.class "mnemo-run-meta" ]
             [ text ("started " ++ run.started)
@@ -1105,6 +1133,11 @@ viewStepRun model =
                             Just reason ->
                                 div [ A.class "mnemo-run-meta" ] [ text ("reason " ++ reason) ]
                         ]
+
+
+isFinalStatus : String -> Bool
+isFinalStatus status =
+    status == "passed" || status == "cancelled"
 
 
 statusBadge : String -> Html Msg

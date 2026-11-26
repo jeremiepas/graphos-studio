@@ -318,6 +318,99 @@ suite =
                         |> Event.simulate Event.click
                         |> Event.expect (App.SelectRun "run|console|r1")
             ]
+        , describe "the word in the run list" <|
+            [ test "a waiting run that will move shows waiting and moves" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "r3"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.findAll [ Selector.class "mnemo-run" ]
+                        |> Query.index 2
+                        |> Query.has [ Selector.text "waiting", Selector.text "Moves" ]
+            , test "a passed run shows no word" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "r2"
+                                      , status = "passed"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.findAll [ Selector.class "mnemo-run" ]
+                        |> Query.index 1
+                        |> Query.hasNot [ Selector.text "Moves" ]
+            , test "the route is not served: every run keeps its status and has no word" <|
+                \_ ->
+                    let
+                        base =
+                            modelWithRuns live runsFixture
+                    in
+                    App.view { base | orchestrator = Orchestrator.NotServed }
+                        |> Query.fromHtml
+                        |> Query.findAll [ Selector.class "mnemo-run" ]
+                        |> Query.index 2
+                        |> Query.hasNot [ Selector.text "Moves" ]
+            , test "a run is matched by its full key as well" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "run|console|r3"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.findAll [ Selector.class "mnemo-run" ]
+                        |> Query.index 2
+                        |> Query.has [ Selector.text "Moves" ]
+            , test "a run the answer does not list has no word" <|
+                \_ ->
+                    let
+                        report =
+                            { live
+                                | runs =
+                                    [ { run = "another-run"
+                                      , status = "waiting"
+                                      , word = "moves"
+                                      , reason = "the cause decided"
+                                      , logFile = Nothing
+                                      }
+                                    ]
+                            }
+                    in
+                    App.view (modelWithRuns report runsFixture)
+                        |> Query.fromHtml
+                        |> Query.findAll [ Selector.class "mnemo-run" ]
+                        |> Query.index 2
+                        |> Query.hasNot [ Selector.text "Moves" ]
+            ]
         , describe "the clock" <|
             [ test "an ISO time gives milliseconds and survives a round trip" <|
                 \_ ->
