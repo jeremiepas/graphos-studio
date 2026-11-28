@@ -131,6 +131,58 @@ suite =
                         , \_ -> Expect.equal True updated.sessionExpired
                         ]
                         ()
+            , test "a note with tags writes them and shows the saving notice" <|
+                \_ ->
+                    let
+                        updated =
+                            App.update (App.SelectNote "A note for the space." ["review", "draft"]) modelWithSession
+                                |> Tuple.first
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal (Just "A note for the space.") updated.note
+                        , \_ -> Expect.equal ["review", "draft"] updated.tags
+                        , \_ -> Expect.equal (Just "Saving the note…") updated.noteNotice
+                        ]
+                        ()
+            , test "a successful save reads back the note and its tags" <|
+                \_ ->
+                    let
+                        saved =
+                            { note = Just "A note for the space."
+                            , tags = ["review", "draft"]
+                            }
+
+                        updated =
+                            App.update (App.GotSaveNote (Ok saved)) modelWithSession
+                                |> Tuple.first
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal (Just "A note for the space.") updated.note
+                        , \_ -> Expect.equal ["review", "draft"] updated.tags
+                        , \_ -> Expect.equal Nothing updated.noteNotice
+                        ]
+                        ()
+            , test "a refused save keeps the last note and names the route" <|
+                \_ ->
+                    let
+                        updated =
+                            App.update (App.GotSaveNote (Err (Api.BadStatus 403)))
+                                ({ modelWithSession | note = Just "A note.", tags = ["review", "draft"] })
+                                |> Tuple.first
+                    in
+                    Expect.all
+                        [ \_ -> Expect.equal (Just "A note.") updated.note
+                        , \_ -> Expect.equal ["review", "draft"] updated.tags
+                        , \_ -> Expect.equal (Just True) (Maybe.map (String.contains "/api/session/space") updated.noteNotice)
+                        , \_ -> Expect.equal (Just True) (Maybe.map (String.contains "403") updated.noteNotice)
+                        ]
+                        ()
+            , test "an empty note with no session clears the note and sends nothing" <|
+                \_ ->
+                    App.update (App.SelectNote "" []) App.initialModel
+                        |> Tuple.first
+                        |> .note
+                        |> Expect.equal Nothing
             ]
         , describe "view"
             [ test "the spaces panel marks the session's space" <|
@@ -204,5 +256,29 @@ suite =
                         |> Query.fromHtml
                         |> Query.findAll [ Selector.attribute (A.attribute "tabindex" "0") ]
                         |> Query.count (\count -> Expect.equal 2 count)
+            , test "the note shows its text and the joined tags" <|
+                \_ ->
+                    let
+                        model =
+                            { modelWithSession | note = Just "A note for the space.", tags = ["review", "draft"] }
+
+                        html =
+                            App.view model |> Query.fromHtml
+                    in
+                    Expect.all
+                        [ \_ -> html |> Query.has [ Selector.attribute (A.attribute "value" "A note for the space.") ]
+                        , \_ -> html |> Query.has [ Selector.attribute (A.attribute "value" "review, draft") ]
+                        ]
+                        ()
+            , test "the note save button is reachable" <|
+                \_ ->
+                    App.view { modelWithSession | note = Just "A note." }
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "Save the note" ]
+            , test "the saving notice is shown" <|
+                \_ ->
+                    App.view { modelWithSession | note = Just "A note.", noteNotice = Just "Saving the note…" }
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "Saving the note…" ]
             ]
         ]

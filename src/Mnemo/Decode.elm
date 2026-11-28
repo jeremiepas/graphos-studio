@@ -5,6 +5,7 @@ module Mnemo.Decode exposing
     , GraphNode
     , Orchestrator
     , OrchestratorRun
+    , SavedNote
     , Run
     , RunDetail
     , Session
@@ -17,6 +18,7 @@ module Mnemo.Decode exposing
     , orchestratorDecoder
     , runDecoder
     , runDetailDecoder
+    , saveNoteDecoder
     , runsDecoder
     , sessionDecoder
     , stepRunDetailDecoder
@@ -41,6 +43,15 @@ type alias Session =
     , spaces : List String
     , poll : Int
     , csrf : String
+    }
+
+
+{-| The console's answer to the note's write on a space (`POST /api/session/space`): the saved
+note and its tags. The write answers `200` with the saved values.
+-}
+type alias SavedNote =
+    { note : Maybe String
+    , tags : List String
     }
 
 
@@ -162,6 +173,15 @@ sessionDecoder =
         (D.field "spaces" (D.list D.string))
         (D.oneOf [ D.field "poll" D.int, D.field "poll_seconds" D.int ])
         (D.oneOf [ D.field "csrf" D.string, D.field "csrf_token" D.string ])
+
+
+{-| The saved note and its tags, read back from the space's write answer.
+-}
+saveNoteDecoder : Decoder SavedNote
+saveNoteDecoder =
+    D.map2 SavedNote
+        (D.field "note" (D.maybe D.string))
+        (D.field "tags" (D.list D.string))
 
 
 runDecoder : Decoder Run

@@ -1,0 +1,16 @@
+{
+  "route": "POST /api/session/space",
+  "request": {
+    "session": {
+      "space": "console",
+      "spaces": ["console", "graphos-studio"],
+      "csrf": "csrf-token-of-the-session"
+    },
+    "write_header": { "X-CSRF-Token": "csrf-token-of-the-session" },
+    "body": { "space": "console", "note": "A note the person wrote for the space.", "tags": ["review"] }
+  },
+  "answer": {
+    "status": 404,
+    "body": { "error": "space not found" }
+  }
+}

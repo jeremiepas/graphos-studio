@@ -1,0 +1,26 @@
+{
+  "route": "POST /api/runs/<run>/rerun",
+  "request": {
+    "session": {
+      "space": "console",
+      "spaces": ["console", "graphos-studio"],
+      "csrf": "csrf-token-of-the-session"
+    },
+    "write_header": { "X-CSRF-Token": "csrf-token-of-the-session" },
+    "body": { "run": "run|console|r1" }
+  },
+  "answer": {
+    "status": 200,
+    "body": {
+      "key": "run|console|r1",
+      "workflow": "dev-plan",
+      "status": "running",
+      "started": "2026-11-26T09:00:00Z",
+      "ended": null,
+      "stopped_by": null,
+      "step_runs": 3,
+      "waiting": 1,
+      "tokens": { "card": 1200, "prompt": 3400 }
+    }
+  }
+}

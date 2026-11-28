@@ -41,6 +41,9 @@ import Time
 type alias Model =
     { theme : Theme
     , session : Maybe Session
+    , note : Maybe String
+    , tags : List String
+    , noteNotice : Maybe String
     , sessionNotice : Maybe String
     , sessionExpired : Bool
     , runs : List Run
@@ -65,6 +68,9 @@ initialModel : Model
 initialModel =
     { theme = Light
     , session = Nothing
+    , note = Nothing
+    , noteNotice = Nothing
+    , tags = []
     , sessionNotice = Nothing
     , sessionExpired = False
     , runs = []
@@ -103,6 +109,8 @@ type Msg
     | OpenStepRun String
     | GotStepRun (Result Api.Error StepRunDetail)
     | Retry
+    | SelectNote String (List String)
+    | GotSaveNote (Result Api.Error Decode.SavedNote)
 
 
 
@@ -181,6 +189,53 @@ update msg model =
 
         GotSpace (Err err) ->
             ( { model | selectionNotice = Just (describeError "/api/session/space" err) }
+            , Cmd.none
+            )
+
+        {- The note and its tags for the selected space. The note says nothing
+        about the space's runs or a decision; it carries only what a person
+        wrote. With no session the note is cleared and nothing is sent. -}
+        SelectNote note tags ->
+            let
+                savedNote =
+                    if note == "" then
+                        Nothing
+
+                    else
+                        Just note
+            in
+            case model.session of
+                Nothing ->
+                    ( { model
+                        | note = Nothing
+                        , tags = []
+                        , noteNotice = Nothing
+                      }
+                    , Cmd.none
+                    )
+
+                Just session ->
+                    ( { model
+                        | note = savedNote
+                        , tags = tags
+                        , noteNotice = Just "Saving the note…"
+                      }
+                    , Api.saveNote { csrf = session.csrf, space = session.space, note = savedNote, tags = tags } GotSaveNote
+                    )
+
+        GotSaveNote (Ok saved) ->
+            ( { model
+                | note = saved.note
+                , tags = saved.tags
+                , noteNotice = Nothing
+              }
+            , Cmd.none
+            )
+
+        GotSaveNote (Err err) ->
+            ( { model
+                | noteNotice = Just (describeError "/api/session/space" err)
+              }
             , Cmd.none
             )
 
@@ -551,10 +606,65 @@ viewSpaces model =
         ]
 
 
+viewNote : Model -> Html Msg
+viewNote model =
+    UI.panel "Note" (viewNoteBody model)
+
+
+viewNoteBody : Model -> List (Html Msg)
+viewNoteBody model =
+    case model.session of
+        Nothing ->
+            [ text "" ]
+
+        Just session ->
+            let
+                noteValue =
+                    Maybe.withDefault "" model.note
+
+                noteOnInput value =
+                    SelectNote value model.tags
+
+                tagValue =
+                    String.join ", " model.tags
+
+                tagOnInput value =
+                    SelectNote (Maybe.withDefault "" model.note) (String.split ", " value)
+
+                saveOnPress =
+                    SelectNote (Maybe.withDefault "" model.note) (String.split ", " (String.join ", " model.tags))
+            in
+            [ div [ A.class "mnemo-note" ]
+                [ UI.field "A note for this space." (UI.textInput
+                        { value = noteValue
+                        , placeholder = "A note for the space."
+                        , onInput = noteOnInput
+                         }
+                    )
+                , UI.field "Tags" (UI.textInput
+                        { value = tagValue
+                        , placeholder = "review, draft"
+                        , onInput = tagOnInput
+                         }
+                    )
+                , div [ A.class "mnemo-note-actions" ]
+                    [ UI.btn
+                        { label = "Save the note"
+                        , enabled = True
+                        , onPress = saveOnPress
+                        }
+                    ]
+                ]
+            , Maybe.map (notice "mnemo-notice") model.noteNotice
+                |> Maybe.withDefault (text "")
+            ]
+
+
 viewRuns : Model -> Html Msg
 viewRuns model =
     div [ A.class "mnemo-runs" ] <|
-        viewOrchestrator model
+        viewNote model
+            :: viewOrchestrator model
             :: (Maybe.map (notice "mnemo-notice") model.runsNotice
                     |> Maybe.withDefault (text "")
                )
