@@ -105,9 +105,11 @@ Haskell package tests with `devenv tasks run openspec-view:test` (or
 
 ## Mnemo page
 
-`src/Mnemo/Main.elm` is a second Elm entry, the read-only Mnemo page
+`src/Mnemo/Main.elm` is a second Elm entry, the Mnemo page
 (`mnemo-workbench`): a left panel of the console's spaces, each workflow's runs
-with status and token use, and the graph of a selected run. It builds to
+with status and token use, the graph of a selected run, and the note of a
+selected space. The runs, the graph, the orchestrator and the note share the
+same session and the same poll interval. It builds to
 `public/mnemo/mnemo.js`; `public/mnemo/index.html` starts `Elm.Mnemo.Main` on `#app`
 through `boot.js`, so the console's `script-src 'self'` policy holds.
 
@@ -125,8 +127,10 @@ The page reads `/api/session` (the spaces, the selected space, the poll
 interval and the CSRF token), `/api/runs`, `/api/runs/<run>`,
 `/api/runs/<run>/graph`, `/api/step-runs/<step-run>` and `/api/orchestrator`.
 Its only write is `POST /api/session/space` with `X-CSRF-Token`; the selection
-lives in the console session, not in the browser. A failed read keeps the last
-data and offers a retry; a `401` says the session expired.
+lives in the console session, not in the browser. That same route also takes the
+note of a space and its tags in the body and answers `200` with what it saved.
+A failed read keeps the last data and offers a retry; a `403` refuses a note a
+space will not hold, and an empty note with no session clears.
 
 ### Orchestrator view
 
@@ -165,6 +169,27 @@ marked stale with its read time, names the route and offers a retry. The
 recorded answers the tests use, and the fields the command's JSON has and has
 not, are in
 `openspec/changes/mnemo-orchestrator-view/verification.md`.
+
+### Note
+
+Each space has a note, edited as a single field in the page. The text is split
+on `, ` into tags as you type and rejoined when you save. The note is written
+with the space selection on `POST /api/session/space`; a save shows a short
+"Saving the note…" notice, then reads the saved note and tags back. A note a
+space will not hold refuses the save and keeps the last note. The note stays in
+the page header as a one-line notice of its own.
+
+The page reads the note from the space the session has selected. Until the
+console serves the note write the page keeps the last note and its tags it
+has; a note with no session clears. What the tests use is in
+`openspec/changes/mnemo-space-workflow/verification.md`.
+
+### Reruns
+
+A rerun sits beside the orchestrator, the graph and each run. It replays a run,
+a workflow or an orchestrator heartbeat from where it stopped. **The rerun routes
+are not served by the pinned console yet, so the page hides the rerun buttons
+until it can reach them.**
 
 ## Layout
 

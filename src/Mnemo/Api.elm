@@ -6,18 +6,20 @@ module Mnemo.Api exposing
     , getRuns
     , getSession
     , getStepRun
+    , saveNote
     , selectSpace
     )
 
 {-| The console's `/api` client. Every read keeps the same-origin session
 cookie; the only write is the session's space selection, which carries the
-session's `X-CSRF-Token`.
+session's `X-CSRF-Token`. That same route also takes the note and its tags in
+the body and answers `200` with what it saved.
 -}
 
 import Http
 import Json.Decode as D
 import Json.Encode as E
-import Mnemo.Decode as Decode exposing (Graph, Orchestrator, Run, RunDetail, Session, StepRunDetail)
+import Mnemo.Decode as Decode exposing (Graph, Orchestrator, Run, RunDetail, SavedNote, Session, StepRunDetail)
 import Url
 
 
@@ -126,6 +128,44 @@ selectSpace config toMsg =
         , url = "/api/session/space"
         , body = Http.jsonBody (E.object [ ( "space", E.string config.space ) ])
         , expect = expectJson Decode.sessionDecoder toMsg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+{-| Encode a note as `null` when it is empty, a string otherwise.
+-}
+noteField : Maybe String -> E.Value
+noteField note =
+    case note of
+        Nothing ->
+            E.null
+
+        Just value ->
+            E.string value
+
+
+{-| The note's write on the selected space. The body carries the note and its
+tags with the session's `X-CSRF-Token` and no credential; the answer `200`
+returns what it saved.
+-}
+saveNote : { csrf : String, space : String, note : Maybe String, tags : List String } -> (Result Error SavedNote -> msg) -> Cmd msg
+saveNote config toMsg =
+    Http.request
+        { method = "POST"
+        , headers =
+            [ Http.header "X-CSRF-Token" config.csrf
+            , Http.header "Accept" "application/json"
+            ]
+        , url = "/api/session/space"
+        , body = Http.jsonBody
+            (E.object
+                [ ( "space", E.string config.space )
+                , ( "note", noteField config.note )
+                , ( "tags", E.list E.string config.tags )
+                ]
+            )
+        , expect = expectJson Decode.saveNoteDecoder toMsg
         , timeout = Nothing
         , tracker = Nothing
         }
